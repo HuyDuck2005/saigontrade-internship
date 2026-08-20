@@ -1,0 +1,22 @@
+# NHẬT KÝ THỰC TẬP (18/08/2026)
+
+## 1. Công việc đã thực hiện
+* **Hạ tầng & Môi trường:**
+  * Dựng máy ảo VMware chạy Ubuntu Server 26.04 LTS, cấu hình SSH và tài khoản người dùng.
+  * Cài đặt thành công Docker Engine và Docker Compose Plugin chính thức[cite: 1].
+  * Cấp quyền chạy Docker không cần sudo cho user (`usermod -aG docker $USER`)[cite: 1].
+* **Triển khai Odoo 19 (Multi-instance):**
+  * Dựng 2 cụm Odoo 19 + PostgreSQL 16 chạy song song và độc lập bằng Docker Compose[cite: 2]:
+    * `Instance 01`: Port `8070:8069` (`~/odoo19_01`)[cite: 2]
+    * `Instance 02`: Port `8071:8069` (`~/odoo19_02`)[cite: 2]
+  * Thiết lập cấu trúc thư mục tách biệt (`postgresql`, `addons`, `config`) và tạo file `odoo.conf` cho từng cụm[cite: 2].
+* **Mạng & Public Service:**
+  * Cài đặt `cloudflared` dạng Systemd Service chạy nền trên hệ thống[cite: 2].
+  * Cấu hình Cloudflare Tunnel để public 2 hệ thống Odoo ra Internet[cite: 2].
+
+## 2. Vấn đề phát sinh & Hướng xử lý
+* **Lỗi `Connection refused` (Cloudflare Tunnel):** Do lệch cấu hình Ingress Rule trỏ sai IP/Port[cite: 2] -> Cập nhật lại Public Hostname trỏ về `localhost:8070` và `localhost:8071`[cite: 2].
+* **Mất hiển thị máy ảo trên VMware sau reboot:** Nạp lại cấu hình bằng cách chọn file `.vmx` qua `File > Open`.
+
+## 3. Kết quả
+* Đã chạy ổn định 4 container Odoo + DB và dịch vụ Cloudflare Tunnel kết nối thành công[cite: 2].

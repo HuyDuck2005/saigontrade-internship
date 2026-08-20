@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_sgt_remote_odoo_tree" model="ir.ui.view">
+        <field name="name">sgt.remote.odoo.tree</field>
+        <field name="model">sgt.remote.odoo</field>
+        <field name="arch" type="xml">
+            <tree string="Cấu hình Remote Odoo">
+                <field name="name"/>
+                <field name="url"/>
+                <field name="db"/>
+                <field name="username"/>
+                <field name="is_active"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_sgt_remote_odoo_form" model="ir.ui.view">
+        <field name="name">sgt.remote.odoo.form</field>
+        <field name="model">sgt.remote.odoo</field>
+        <field name="arch" type="xml">
+            <form string="Cấu hình Remote Odoo">
+                <header>
+                    <button name="test_connection" type="object" string="Kiểm tra kết nối" class="btn-primary"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="url"/>
+                            <field name="db"/>
+                        </group>
+                        <group>
+                            <field name="username"/>
+                            <field name="password" password="True"/>
+                            <field name="is_active"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_sgt_remote_odoo" model="ir.actions.act_window">
+        <field name="name">Cấu hình Remote Odoo</field>
+        <field name="res_model">sgt.remote.odoo</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_sgt_remote_odoo_root"
+              name="Sync Odoo2"
+              parent="crm.crm_menu_root"
+              sequence="50"/>
+
+    <menuitem id="menu_sgt_remote_odoo_config"
+              name="Cấu hình Remote Odoo"
+              parent="menu_sgt_remote_odoo_root"
+              action="action_sgt_remote_odoo"
+              sequence="10"/>
+</odoo>

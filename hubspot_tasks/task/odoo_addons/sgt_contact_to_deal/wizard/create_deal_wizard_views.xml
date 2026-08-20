@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_create_deal_wizard_form" model="ir.ui.view">
+        <field name="name">create.deal.wizard.form</field>
+        <field name="model">create.deal.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Tạo Deal hàng loạt từ Contact">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="deal_name"/>
+                            <field name="expected_revenue" widget="monetary"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="event"/>
+                            <field name="event_location"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="notes" placeholder="Nhập ghi chú hoặc yêu cầu chi tiết..."/>
+                    </group>
+                    <notebook>
+                        <page string="Contacts được chọn">
+                            <field name="partner_ids">
+                                <tree>
+                                    <field name="name"/>
+                                    <field name="phone"/>
+                                    <field name="email"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <footer>
+                    <button name="action_create_deals" string="Tạo Deals Ngay" type="object" class="btn-primary"/>
+                    <button string="Hủy bỏ" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action Binding vào Action menu của res.partner -->
+    <record id="action_create_deal_wizard" model="ir.actions.act_window">
+        <field name="name">Tạo CRM Deal hàng loạt</field>
+        <field name="res_model">create.deal.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="base.model_res_partner"/>
+        <field name="binding_view_types">list</field>
+    </record>
+</odoo>

@@ -1,0 +1,18 @@
+# Môi trường ảo Python
+venv/
+__pycache__/
+*.pyc
+
+# Bảo mật và Tokens (TUYỆT ĐỐI KHÔNG PUSH LÊN GITHUB)
+.env
+credentials.json
+*.json.key
+
+# Logs và state tạm
+logs/
+*.csv
+*.json
+task1_sync_state.json
+audit_change_log.csv
+audit_change_log.json
+.pytest_cache/
