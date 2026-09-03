@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_daily_report_search" model="ir.ui.view">
+        <field name="name">daily.report.search</field>
+        <field name="model">daily.report</field>
+        <field name="priority" eval="1"/>
+        <field name="arch" type="xml">
+            <search string="Tìm kiếm Báo Cáo">
+                <field name="name" string="Tiêu đề / Kế hoạch" filter_domain="['|', ('name', 'ilike', self), ('next_day_plan', 'ilike', self)]"/>
+                <field name="employee_id" string="Tên Thực tập sinh"/>
+                <field name="report_date" string="Ngày báo cáo"/>
+                <separator/>
+                <filter string="🚨 Cần hỗ trợ gấp" name="need_support" domain="[('need_support', '=', True)]"/>
+                <filter string="📝 Đang Nháp / Bị trả lại" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="📤 Đã Nộp" name="submitted" domain="[('state', '=', 'submitted')]"/>
+                <filter string="✅ Đã Review" name="reviewed" domain="[('state', '=', 'reviewed')]"/>
+                <separator/>
+                <filter string="🗑️ Báo Cáo Đã Lưu Trữ" name="archived" domain="[('active', '=', False)]"/>
+                <group expand="0" string="Gom nhóm theo...">
+                    <filter string="Người báo cáo" name="group_by_employee" context="{'group_by': 'employee_id'}"/>
+                    <filter string="Trạng thái" name="group_by_state" context="{'group_by': 'state'}"/>
+                    <filter string="Ngày báo cáo" name="group_by_date" context="{'group_by': 'report_date:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_daily_report_tree" model="ir.ui.view">
+        <field name="name">daily.report.tree</field>
+        <field name="model">daily.report</field>
+        <field name="arch" type="xml">
+            <tree string="Daily Reports">
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="report_date"/>
+                <field name="need_support" widget="boolean_toggle" readonly="1"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state == 'reviewed'"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_daily_report_form" model="ir.ui.view">
+        <field name="name">daily.report.form</field>
+        <field name="model">daily.report</field>
+        <field name="arch" type="xml">
+            <form string="Daily Report">
+                <header>
+                    <button name="action_open_full_screen" string="🖥️ Mở Toàn Màn Hình" type="object" class="btn-info" invisible="not context.get('show_fullscreen_btn')"/>
+                    <button name="action_submit" string="Nộp Báo Cáo" type="object" class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_request_revision" string="🔄 Yêu cầu sửa lại" type="object" class="btn-secondary" invisible="state != 'submitted'" groups="base.group_erp_manager"/>
+                    <button name="action_unlock_admin" string="🔓 Mở Khóa" type="object" class="btn-secondary" invisible="state != 'reviewed'" groups="base.group_erp_manager"/>
+                    <button name="action_resolve_support" string="Đã xử lý hỗ trợ" type="object" class="oe_highlight btn-warning" invisible="not need_support" groups="base.group_erp_manager"/>
+                    <button name="action_review" string="Lưu &amp; Chốt Điểm" type="object" class="oe_highlight" invisible="state != 'submitted'" groups="base.group_erp_manager"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submitted,reviewed"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="Đã Lưu Trữ" bg_color="bg-danger" invisible="active"/>
+                    <field name="active" invisible="1"/>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="state != 'draft'"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="employee_id" readonly="state != 'draft'"/>
+                            <field name="report_date" readonly="state != 'draft'"/>
+                        </group>
+                        <group>
+                            <field name="need_support" widget="boolean_toggle" readonly="state != 'draft'"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Công Việc">
+                            <group>
+                                <!-- VÁ LỖ HỔNG: TTS CHỈ THẤY TASK CỦA CHÍNH MÌNH (domain) -->
+                                <field name="completed_task_ids" widget="many2many_tags" readonly="state != 'draft'" domain="[('user_ids', 'in', uid)]"/>
+                                <field name="in_progress_task_ids" widget="many2many_tags" readonly="state != 'draft'" domain="[('user_ids', 'in', uid)]"/>
+                                <field name="attachment_ids" widget="many2many_binary" readonly="state != 'draft'"/>
+                            </group>
+                        </page>
+                        <page string="Vấn Đề &amp; Giải Pháp">
+                            <group>
+                                <field name="problem_description" readonly="state != 'draft'"/>
+                                <field name="solution_description" readonly="state != 'draft'"/>
+                                <field name="next_day_plan" readonly="state != 'draft'"/>
+                            </group>
+                        </page>
+                        <page string="Đánh Giá Của Admin" invisible="state == 'draft'">
+                            <group>
+                                <field name="support_response" placeholder="Admin nhập hướng dẫn xử lý vấn đề..." readonly="state == 'reviewed'"/>
+                                <field name="manager_score" widget="priority" readonly="state == 'reviewed'"/>
+                                <field name="manager_feedback" placeholder="Admin nhập nhận xét đánh giá..." readonly="state == 'reviewed'"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_daily_report" model="ir.actions.act_window">
+        <field name="name">Báo Cáo Ngày</field>
+        <field name="res_model">daily.report</field>
+        <field name="view_mode">tree,form,graph,pivot</field>
+        <field name="search_view_id" ref="view_daily_report_search"/>
+    </record>
+</odoo>

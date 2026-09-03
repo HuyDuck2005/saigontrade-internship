@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_task_presentation_tree" model="ir.ui.view">
+        <field name="name">task.presentation.tree</field>
+        <field name="model">task.presentation</field>
+        <field name="arch" type="xml">
+            <tree string="Lịch Thuyết Trình">
+                <field name="name"/>
+                <field name="presenter_id"/>
+                <field name="presentation_date"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-warning="state == 'scheduled'" decoration-success="state == 'completed'"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_task_presentation_form" model="ir.ui.view">
+        <field name="name">task.presentation.form</field>
+        <field name="model">task.presentation</field>
+        <field name="arch" type="xml">
+            <form string="Lịch Thuyết Trình">
+                <header>
+                    <button name="action_schedule" string="Lên Lịch" type="object" class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_complete" string="Đã Hoàn Thành" type="object" class="oe_highlight" invisible="state != 'scheduled'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,scheduled,completed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="Ví dụ: Demo sản phẩm App..."/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="presenter_id"/>
+                            <field name="presentation_date"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Nội Dung Báo Cáo">
+                            <group>
+                                <field name="task_ids" widget="many2many_tags"/>
+                                <field name="reviewer_ids" widget="many2many_tags"/>
+                            </group>
+                        </page>
+                        <!-- GIAO DIỆN ĐÁNH GIÁ TRỰC TIẾP TẠI ĐÂY -->
+                        <page string="Đánh Giá Của Admin" invisible="state == 'draft'">
+                            <field name="feedback_ids" context="{'default_employee_id': presenter_id}">
+                                <tree editable="bottom">
+                                    <field name="reviewer_id" string="Người chấm"/>
+                                    <field name="score_technical" widget="priority" string="Kỹ thuật"/>
+                                    <field name="score_communication" widget="priority" string="Trình bày"/>
+                                    <field name="comments" string="Nhận xét chi tiết"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_task_presentation" model="ir.actions.act_window">
+        <field name="name">Lịch Thuyết Trình</field>
+        <field name="res_model">task.presentation</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

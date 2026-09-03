@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_daily_report_user,daily.report.user,model_daily_report,base.group_user,1,1,1,0
+access_daily_report_admin,daily.report.admin,model_daily_report,base.group_erp_manager,1,1,1,1
+access_weekly_report,weekly.report,model_weekly_report,base.group_user,1,1,1,0
+access_task_presentation,task.presentation,model_task_presentation,base.group_user,1,1,1,0
+access_intern_dashboard,intern.dashboard,model_intern_dashboard,base.group_user,1,1,1,0
+access_work_feedback_user,work.feedback.user,model_work_feedback,base.group_user,1,0,0,0
+access_work_feedback_admin,work.feedback.admin,model_work_feedback,base.group_erp_manager,1,1,1,1

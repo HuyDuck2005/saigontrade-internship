@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_intern_work_root" name="Intern Work" sequence="10" web_icon="project,static/description/icon.png"/>
+    
+    <menuitem id="menu_intern_dashboard" name="Tổng Quan (KPI)" parent="menu_intern_work_root" action="action_intern_dashboard" sequence="5"/>
+    
+    <menuitem id="menu_intern_reports" name="Báo Cáo" parent="menu_intern_work_root" sequence="10"/>
+    <menuitem id="menu_daily_report" name="Báo Cáo Ngày" parent="menu_intern_reports" action="action_daily_report" sequence="10"/>
+    <menuitem id="menu_weekly_report" name="Báo Cáo Tuần" parent="menu_intern_reports" action="action_weekly_report" sequence="20"/>
+
+    <menuitem id="menu_intern_reviews" name="Thuyết Trình" parent="menu_intern_work_root" sequence="20"/>
+    <menuitem id="menu_task_presentation" name="Lịch Thuyết Trình" parent="menu_intern_reviews" action="action_task_presentation" sequence="10"/>
+</odoo>

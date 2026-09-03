@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_sync_configuration_tree" model="ir.ui.view">
+        <field name="name">sync.configuration.tree</field>
+        <field name="model">sync.configuration</field>
+        <field name="arch" type="xml">
+            <tree string="Cấu hình Mapping">
+                <field name="name"/>
+                <field name="model_id"/>
+                <field name="field_id"/>
+                <field name="remote_field_name"/>
+                <field name="active" widget="boolean_toggle"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_sync_configuration_form" model="ir.ui.view">
+        <field name="name">sync.configuration.form</field>
+        <field name="model">sync.configuration</field>
+        <field name="arch" type="xml">
+            <form string="Cấu hình Mapping">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1><field name="name" placeholder="VD: Mapping Job Title..."/></h1>
+                    </div>
+                    <group>
+                        <group string="Nguồn (Odoo 1)">
+                            <field name="model_id" options="{'no_create': True}"/>
+                            <field name="field_id" options="{'no_create': True}" context="{'default_model_id': model_id}"/>
+                        </group>
+                        <group string="Đích (Odoo 2 / API)">
+                            <field name="remote_field_name"/>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Bảo mật &amp; Phân quyền">
+                            <p class="text-muted">Chọn các nhóm người dùng được phép đẩy thông tin này đi.</p>
+                            <field name="security_group_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_sync_configuration" model="ir.actions.act_window">
+        <field name="name">Cấu hình Field Mapping</field>
+        <field name="res_model">sync.configuration</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_sync_configuration" 
+              name="Field Mapping" 
+              parent="menu_sgt_remote_odoo_root" 
+              action="action_sync_configuration" 
+              sequence="20"/>
+</odoo>

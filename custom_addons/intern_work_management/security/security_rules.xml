@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <!-- 1. QUY TẮC CHO BÁO CÁO NGÀY -->
+        <record id="rule_daily_report_intern" model="ir.rule">
+            <field name="name">Thực tập sinh chỉ xem Báo cáo ngày của mình</field>
+            <field name="model_id" ref="model_daily_report"/>
+            <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+        <record id="rule_daily_report_manager" model="ir.rule">
+            <field name="name">Quản lý xem tất cả Báo cáo ngày</field>
+            <field name="model_id" ref="model_daily_report"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('base.group_erp_manager'))]"/>
+        </record>
+
+        <!-- 2. QUY TẮC CHO BÁO CÁO TUẦN -->
+        <record id="rule_weekly_report_intern" model="ir.rule">
+            <field name="name">Thực tập sinh chỉ xem Báo cáo tuần của mình</field>
+            <field name="model_id" ref="model_weekly_report"/>
+            <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+        <record id="rule_weekly_report_manager" model="ir.rule">
+            <field name="name">Quản lý xem tất cả Báo cáo tuần</field>
+            <field name="model_id" ref="model_weekly_report"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('base.group_erp_manager'))]"/>
+        </record>
+
+        <!-- 3. QUY TẮC CHO LỊCH THUYẾT TRÌNH -->
+        <record id="rule_presentation_intern" model="ir.rule">
+            <field name="name">Thực tập sinh chỉ xem Lịch thuyết trình của mình</field>
+            <field name="model_id" ref="model_task_presentation"/>
+            <field name="domain_force">[('presenter_id.user_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+        <record id="rule_presentation_manager" model="ir.rule">
+            <field name="name">Quản lý xem tất cả Lịch thuyết trình</field>
+            <field name="model_id" ref="model_task_presentation"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('base.group_erp_manager'))]"/>
+        </record>
+    </data>
+</odoo>

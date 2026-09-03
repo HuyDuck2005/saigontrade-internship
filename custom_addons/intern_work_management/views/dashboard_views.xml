@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_intern_dashboard_form" model="ir.ui.view">
+        <field name="name">intern.dashboard.form</field>
+        <field name="model">intern.dashboard</field>
+        <field name="arch" type="xml">
+            <form create="false" delete="false">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_reports" type="object" class="oe_stat_button" icon="fa-file-text-o">
+                            <field name="total_reports" widget="statinfo" string="Tổng Báo Cáo"/>
+                        </button>
+                        <button name="action_open_progress_tasks" type="object" class="oe_stat_button" icon="fa-spinner">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value text-warning"><field name="total_tasks_progress"/></span>
+                                <span class="o_stat_text">Task Đang Làm</span>
+                            </div>
+                        </button>
+                        <button name="action_open_done_tasks" type="object" class="oe_stat_button" icon="fa-check-circle">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value text-success"><field name="total_tasks_done"/></span>
+                                <span class="o_stat_text">Task Đã Xong</span>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <div class="oe_title mt-4 mb-4">
+                        <h1>BẢNG ĐIỀU KHIỂN TỔNG QUAN</h1>
+                    </div>
+
+                    <notebook>
+                        <page string="🚨 CẦN HỖ TRỢ GẤP">
+                            <!-- TRUYỀN NGỮ CẢNH YÊU CẦU HIỆN NÚT VÀO ĐÂY -->
+                            <field name="urgent_report_ids" readonly="1" context="{'show_fullscreen_btn': True}">
+                                <tree>
+                                    <field name="name"/>
+                                    <field name="employee_id"/>
+                                    <field name="report_date"/>
+                                    <field name="problem_description" string="Mô tả vấn đề"/>
+                                    <button name="action_open_form_view" string="Mở Xem" type="object" class="btn-sm btn-primary"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="📊 DANH SÁCH BÁO CÁO">
+                            <group col="4">
+                                <field name="filter_type"/>
+                                <field name="filter_date"/>
+                            </group>
+                            <!-- TRUYỀN NGỮ CẢNH YÊU CẦU HIỆN NÚT VÀO ĐÂY -->
+                            <field name="filtered_report_ids" readonly="1" context="{'show_fullscreen_btn': True}">
+                                <tree>
+                                    <field name="name"/>
+                                    <field name="employee_id"/>
+                                    <field name="report_date"/>
+                                    <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state == 'reviewed'"/>
+                                    <button name="action_open_form_view" string="Mở Xem" type="object" class="btn-sm btn-secondary"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_intern_dashboard" model="ir.actions.server">
+        <field name="name">Tổng Quan KPI</field>
+        <field name="model_id" ref="model_intern_dashboard"/>
+        <field name="state">code</field>
+        <field name="code">
+record = env['intern.dashboard'].search([], limit=1)
+if not record:
+    record = env['intern.dashboard'].create({'name': 'Dashboard'})
+action = {
+    'type': 'ir.actions.act_window',
+    'name': 'Tổng Quan',
+    'res_model': 'intern.dashboard',
+    'res_id': record.id,
+    'view_mode': 'form',
+    'target': 'current',
+}
+        </field>
+    </record>
+</odoo>
