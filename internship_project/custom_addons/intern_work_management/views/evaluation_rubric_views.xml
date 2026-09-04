@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- View for Evaluation Rubric -->
+    <record id="view_evaluation_rubric_form" model="ir.ui.view">
+        <field name="name">evaluation.rubric.form</field>
+        <field name="model">evaluation.rubric</field>
+        <field name="arch" type="xml">
+            <form string="Bảng Tiêu Chí">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="Ví dụ: Technical Skills..."/></h1>
+                    </div>
+                    <group>
+                        <field name="description"/>
+                    </group>
+                    <notebook>
+                        <page string="Các Tiêu Chí Đánh Giá">
+                            <field name="criteria_ids">
+                                <tree editable="bottom">
+                                    <field name="name"/>
+                                    <field name="weight"/>
+                                    <field name="description"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_evaluation_rubric_tree" model="ir.ui.view">
+        <field name="name">evaluation.rubric.tree</field>
+        <field name="model">evaluation.rubric</field>
+        <field name="arch" type="xml">
+            <tree string="Bảng Tiêu Chí">
+                <field name="name"/>
+                <field name="description"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_evaluation_rubric" model="ir.actions.act_window">
+        <field name="name">Bảng Tiêu Chí Đánh Giá</field>
+        <field name="res_model">evaluation.rubric</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

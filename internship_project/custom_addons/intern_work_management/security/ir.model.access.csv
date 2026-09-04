@@ -6,3 +6,10 @@ access_task_presentation,task.presentation,model_task_presentation,base.group_us
 access_intern_dashboard,intern.dashboard,model_intern_dashboard,base.group_user,1,1,1,0
 access_work_feedback_user,work.feedback.user,model_work_feedback,base.group_user,1,0,0,0
 access_work_feedback_admin,work.feedback.admin,model_work_feedback,base.group_erp_manager,1,1,1,1
+
+access_intern_assessment_campaign_admin,intern.assessment.campaign,model_intern_assessment_campaign,base.group_erp_manager,1,1,1,1
+access_evaluation_rubric_admin,evaluation.rubric,model_evaluation_rubric,base.group_erp_manager,1,1,1,1
+access_evaluation_criteria_admin,evaluation.criteria,model_evaluation_criteria,base.group_erp_manager,1,1,1,1
+access_intern_assessment_campaign_user,intern.assessment.campaign,model_intern_assessment_campaign,base.group_user,1,0,0,0
+access_evaluation_rubric_user,evaluation.rubric,model_evaluation_rubric,base.group_user,1,0,0,0
+access_evaluation_criteria_user,evaluation.criteria,model_evaluation_criteria,base.group_user,1,0,0,0

@@ -1,0 +1,4691 @@
+================ CẤU TRÚC THƯ MỤC ================
+.
+|---README.md
+|---__init__.py
+|---__manifest__.py
+|---data
+| |---cron.xml
+| |---report_sequence.xml
+|---export_code.sh
+|---full_source_code.txt
+|---models
+| |---__init__.py
+| |---daily_report.py
+| |---dashboard.py
+| |---project.py
+| |---task_presentation.py
+| |---weekly_report.py
+| |---work_feedback.py
+|---project_overview.txt
+|---security
+| |---ir.model.access.csv
+| |---security_groups.xml
+| |---security_rules.xml
+|---views
+| |---daily_report_views.xml
+| |---dashboard_views.xml
+| |---menu_views.xml
+| |---project_views.xml
+| |---task_presentation_views.xml
+| |---weekly_report_views.xml
+| |---work_feedback_views.xml
+
+================ NỘI DUNG CODE ================
+
+
+--------------------------------------------------
+📄 FILE: ./README.md
+--------------------------------------------------
+# 🚀 Dự án Quản lý Thực tập sinh — Intern Work Management
+
+> **Custom Odoo Module hỗ trợ quản lý công việc, báo cáo, thuyết trình và đánh giá thực tập sinh**
+
+**Người phát triển:** Vũ Huy Đức
+**Đơn vị:** Đại học Quản lý và Công nghệ TP.HCM (UMT)
+**Môi trường phát triển:** WSL Ubuntu, Docker, Odoo 17
+**Container:** `odoo-app`
+**Repository:** `saigontrade-internship`
+
+---
+
+## 📌 1. Tổng quan dự án
+
+**Intern Work Management** là một Custom Module được xây dựng trên **Odoo 17**, nhằm hỗ trợ doanh nghiệp quản lý quá trình làm việc của thực tập sinh một cách tập trung.
+
+Hệ thống tập trung vào ba hoạt động chính:
+
+1. Ghi nhận công việc và kết quả làm việc hằng ngày.
+2. Quản lý báo cáo, thuyết trình và đánh giá định kỳ.
+3. Hỗ trợ người quản lý theo dõi tiến độ, duyệt báo cáo và đánh giá thực tập sinh.
+
+Module được tích hợp với các thành phần có sẵn của Odoo như:
+
+* **Project** — quản lý Project và Task.
+* **Employees** — quản lý thông tin thực tập sinh.
+* **Discuss** — thông báo và trao đổi.
+* **Users & Security** — quản lý tài khoản và phân quyền.
+* **Scheduled Actions / Cron** — tự động hóa các công việc định kỳ.
+
+---
+
+## 🎯 2. Mục tiêu hệ thống
+
+### Đối với thực tập sinh
+
+* Ghi nhận công việc đã thực hiện mỗi ngày.
+* Mô tả vấn đề gặp phải và cách giải quyết.
+* Liên kết báo cáo với Task thực tế.
+* Theo dõi trạng thái báo cáo.
+* Chuẩn bị nội dung cho các buổi thuyết trình.
+* Xem nhận xét và yêu cầu chỉnh sửa từ người quản lý.
+
+### Đối với người quản lý
+
+* Theo dõi tiến độ của từng thực tập sinh.
+* Kiểm tra báo cáo hằng ngày.
+* Duyệt hoặc yêu cầu chỉnh sửa báo cáo.
+* Đánh giá kết quả làm việc.
+* Theo dõi Task hoàn thành.
+* Quản lý lịch thuyết trình.
+* Xem Dashboard tổng quan.
+* Phát hiện những trường hợp chưa nộp báo cáo.
+
+### Đối với Admin
+
+* Quản lý người dùng và phân quyền.
+* Quản lý Project và Task.
+* Quản lý toàn bộ báo cáo.
+* Duyệt hàng loạt báo cáo/thuyết trình.
+* Theo dõi dữ liệu tổng hợp.
+* Quản lý cấu hình hệ thống.
+
+---
+
+# 🏗️ 3. Kiến trúc tổng thể
+
+```text
+                    ┌─────────────────────────┐
+                    │       Odoo 17           │
+                    │     Intern Work         │
+                    │      Management         │
+                    └────────────┬────────────┘
+                                 │
+             ┌───────────────────┼───────────────────┐
+             │                   │                   │
+             ▼                   ▼                   ▼
+      ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+      │ Daily Report│     │Weekly Report│     │ Presentation│
+      └──────┬──────┘     └──────┬──────┘     └──────┬──────┘
+             │                   │                   │
+             └───────────────────┼───────────────────┘
+                                 │
+                                 ▼
+                       ┌──────────────────┐
+                       │ Odoo Project     │
+                       │ Project / Task   │
+                       └────────┬─────────┘
+                                │
+                                ▼
+                       ┌──────────────────┐
+                       │ Dashboard / KPI  │
+                       └──────────────────┘
+```
+
+---
+
+# 📁 4. Cấu trúc thư mục
+
+Cấu trúc module được tổ chức theo chuẩn Custom Module của Odoo:
+
+```text
+intern_work_management/
+│
+├── __init__.py
+├── __manifest__.py
+│
+├── models/
+│   ├── __init__.py
+│   ├── daily_report.py
+│   ├── weekly_report.py
+│   ├── task_presentation.py
+│   └── project_project.py
+│
+├── views/
+│   ├── daily_report_views.xml
+│   ├── weekly_report_views.xml
+│   ├── task_presentation_views.xml
+│   ├── dashboard_views.xml
+│   └── project_views.xml
+│
+├── security/
+│   ├── security_groups.xml
+│   └── ir.model.access.csv
+│
+├── data/
+│   └── ir_cron.xml
+│
+└── static/
+    └── description/
+        └── icon.png
+```
+
+## 4.1. `__manifest__.py`
+
+File khai báo thông tin của module:
+
+* Tên module.
+* Phiên bản.
+* Mô tả.
+* Dependencies.
+* Danh sách XML/CSV cần load.
+* Category.
+* Application.
+
+Ví dụ:
+
+```python
+{
+    "name": "Intern Work Management",
+    "version": "17.0.1.0.0",
+    "category": "Project",
+    "summary": "Quản lý công việc và báo cáo thực tập sinh",
+    "depends": [
+        "base",
+        "project",
+        "hr",
+        "mail",
+    ],
+    "data": [
+        "security/security_groups.xml",
+        "security/ir.model.access.csv",
+        "data/ir_cron.xml",
+
+        "views/daily_report_views.xml",
+        "views/weekly_report_views.xml",
+        "views/task_presentation_views.xml",
+        "views/project_views.xml",
+        "views/dashboard_views.xml",
+    ],
+    "installable": True,
+    "application": True,
+}
+```
+
+---
+
+## 4.2. `models/`
+
+Chứa toàn bộ Python Model của module.
+
+### `daily_report.py`
+
+Quản lý báo cáo công việc cuối ngày.
+
+Các thông tin chính có thể bao gồm:
+
+* Thực tập sinh.
+* Ngày báo cáo.
+* Công việc đã thực hiện.
+* Kết quả đạt được.
+* Vấn đề gặp phải.
+* Cách giải quyết.
+* Task liên quan.
+* Trạng thái.
+* Nhận xét của quản lý.
+* Điểm đánh giá.
+
+Luồng trạng thái:
+
+```text
+Draft
+  │
+  ▼
+Submitted
+  │
+  ▼
+Reviewed
+```
+
+---
+
+### `weekly_report.py`
+
+Quản lý báo cáo tổng hợp theo tuần.
+
+Mục đích:
+
+* Tổng hợp công việc trong tuần.
+* Tổng hợp Task đã hoàn thành.
+* Tổng hợp vấn đề.
+* Chuẩn bị nội dung báo cáo.
+* Hỗ trợ đánh giá theo tuần.
+
+---
+
+### `task_presentation.py`
+
+Quản lý lịch và nội dung thuyết trình.
+
+Thông tin có thể bao gồm:
+
+* Người trình bày.
+* Chủ đề.
+* Ngày thuyết trình.
+* Task được trình bày.
+* Nội dung.
+* Trạng thái.
+* Nhận xét.
+* Điểm đánh giá.
+
+---
+
+### `project_project.py`
+
+Kế thừa model:
+
+```python
+project.project
+```
+
+Mục đích là tự động thiết lập cấu trúc Kanban cho Project mới.
+
+Ví dụ:
+
+```text
+To Do
+   ↓
+In Progress
+   ↓
+Done
+```
+
+Có thể sử dụng:
+
+```python
+@api.model_create_multi
+```
+
+để xử lý việc khởi tạo khi tạo Project.
+
+---
+
+# 🖥️ 5. Các tính năng chính
+
+## 5.1. Daily Report
+
+Thực tập sinh thực hiện báo cáo vào cuối mỗi ngày.
+
+Một báo cáo có thể bao gồm:
+
+| Trường          | Mô tả                  |
+| --------------- | ---------------------- |
+| Intern          | Người thực hiện        |
+| Date            | Ngày báo cáo           |
+| Work Done       | Công việc đã thực hiện |
+| Result          | Kết quả                |
+| Problem         | Vấn đề gặp phải        |
+| Solution        | Cách giải quyết        |
+| Tasks           | Task liên quan         |
+| Status          | Trạng thái             |
+| Manager Comment | Nhận xét               |
+| Rating          | Đánh giá               |
+
+---
+
+## 5.2. Weekly Report
+
+Weekly Report dùng để tổng hợp kết quả làm việc trong tuần.
+
+Ví dụ:
+
+```text
+Tuần 1
+├── Daily Report 01
+├── Daily Report 02
+├── Daily Report 03
+├── Daily Report 04
+└── Daily Report 05
+```
+
+Từ đó người quản lý có thể theo dõi:
+
+* Tổng số ngày đã báo cáo.
+* Tổng số Task.
+* Task đã hoàn thành.
+* Task đang thực hiện.
+* Các vấn đề phát sinh.
+* Nội dung đã học được.
+
+---
+
+## 5.3. Task Presentation
+
+Module hỗ trợ quản lý các buổi trình bày/thuyết trình.
+
+Quy trình:
+
+```text
+Tạo lịch
+    ↓
+Chuẩn bị nội dung
+    ↓
+Trình bày
+    ↓
+Manager Review
+    ↓
+Đánh giá
+```
+
+Lịch trình được thiết kế phù hợp với hoạt động của nhóm:
+
+* **Thứ 3:** họp / trình bày.
+* **Thứ 5:** họp / trình bày.
+* **Cuối mỗi ngày:** thực tập sinh nộp Daily Report.
+
+---
+
+# 🔗 6. Mapping Report với Project Task
+
+Một trong những chức năng quan trọng của module là liên kết báo cáo với Task.
+
+Quan hệ:
+
+```text
+Daily Report
+      │
+      │ Many2many
+      ▼
+Project Task
+```
+
+Ví dụ:
+
+```text
+Daily Report: 03/09/2026
+
+Công việc:
+- Xử lý lỗi Odoo XML
+- Tạo Dashboard
+- Kiểm tra phân quyền
+
+Tasks:
+├── Fix XML View
+├── Build Dashboard
+└── Security Configuration
+```
+
+Việc mapping giúp dữ liệu báo cáo phản ánh trực tiếp công việc thực tế.
+
+---
+
+# 🔐 7. Phân quyền & Bảo mật
+
+Hệ thống phân chia quyền theo vai trò.
+
+## 7.1. Intern / User
+
+Có quyền:
+
+* Xem báo cáo của mình.
+* Tạo báo cáo.
+* Chỉnh sửa báo cáo chưa gửi.
+* Gửi báo cáo.
+* Xem Task được giao.
+* Xem nhận xét của quản lý.
+
+Không được:
+
+* Xóa báo cáo đã gửi.
+* Chốt điểm.
+* Duyệt báo cáo của người khác.
+* Thay đổi dữ liệu của người khác.
+
+---
+
+## 7.2. Manager / Admin
+
+Có quyền:
+
+* Xem báo cáo.
+* Review báo cáo.
+* Yêu cầu chỉnh sửa.
+* Đánh giá.
+* Chốt điểm.
+* Quản lý Task.
+* Quản lý lịch thuyết trình.
+* Xem Dashboard.
+
+---
+
+## 7.3. Access Control
+
+File:
+
+```text
+security/ir.model.access.csv
+```
+
+Ví dụ quyền cơ bản:
+
+```text
+Read  | Write | Create | Delete
+  1   |   1   |   1    |   0
+```
+
+Đối với báo cáo, ưu tiên sử dụng **Archive / Soft Delete** thay vì xóa dữ liệu vĩnh viễn.
+
+---
+
+# 🔎 8. Domain Filter
+
+Thực tập sinh chỉ nên nhìn thấy những Task được giao cho mình.
+
+Ví dụ domain:
+
+```python
+[('user_ids', 'in', uid)]
+```
+
+Mục đích:
+
+```text
+User A
+   ↓
+Chỉ nhìn thấy Task của User A
+
+User B
+   ↓
+Chỉ nhìn thấy Task của User B
+```
+
+Điều này giúp hạn chế việc thực tập sinh xem hoặc báo cáo dựa trên công việc của người khác.
+
+---
+
+# 📊 9. Dashboard
+
+Dashboard cung cấp cái nhìn tổng quan cho người quản lý.
+
+Các chỉ số có thể bao gồm:
+
+```text
+┌──────────────────┐
+│ Tổng thực tập    │
+│       15         │
+└──────────────────┘
+
+┌──────────────────┐
+│ Báo cáo hôm nay  │
+│       12         │
+└──────────────────┘
+
+┌──────────────────┐
+│ Task hoàn thành  │
+│       38         │
+└──────────────────┘
+
+┌──────────────────┐
+│ Chưa nộp báo cáo │
+│        3         │
+└──────────────────┘
+```
+
+Dashboard hỗ trợ:
+
+* KPI.
+* Group By.
+* Filter.
+* Lọc theo thời gian.
+* Theo dõi trạng thái.
+* So sánh thực tập sinh.
+* Phát hiện báo cáo chưa nộp.
+* Theo dõi tiến độ Task.
+
+---
+
+# 🤖 10. Tự động hóa bằng Cron Job
+
+Hệ thống sử dụng **Scheduled Action / `ir.cron`** để tự động kiểm tra báo cáo.
+
+## Quy trình
+
+```text
+17:00 mỗi ngày
+       ↓
+Cron Job chạy
+       ↓
+Kiểm tra danh sách Intern
+       ↓
+Kiểm tra Daily Report
+       ↓
+Có báo cáo?
+   ┌───┴───┐
+  Có      Không
+   │        │
+   ▼        ▼
+Tiếp tục   Gửi cảnh báo
+```
+
+Mục đích:
+
+* Nhắc thực tập sinh chưa nộp báo cáo.
+* Giảm công việc kiểm tra thủ công.
+* Hạn chế tình trạng quên báo cáo.
+
+---
+
+# 🔔 11. Notification & Mention
+
+Khi quản lý yêu cầu sửa báo cáo:
+
+```text
+Manager
+   ↓
+Request Revision
+   ↓
+Notification
+   ↓
+Intern
+```
+
+Khi báo cáo được review:
+
+```text
+Daily Report
+     ↓
+Manager Review
+     ↓
+Comment + Rating
+     ↓
+Intern receives notification
+```
+
+Điều này giúp người thực tập sinh biết chính xác:
+
+* Báo cáo nào cần sửa.
+* Lý do cần sửa.
+* Nhận xét của quản lý.
+* Kết quả đánh giá.
+
+---
+
+# ⚙️ 12. Batch Approve
+
+Admin có thể duyệt nhiều bản ghi cùng lúc từ List View.
+
+Ví dụ:
+
+```text
+☑ Report #001
+☑ Report #002
+☑ Report #003
+☑ Report #004
+
+        ↓
+
+Batch Approve
+
+        ↓
+
+All → Reviewed
+```
+
+Chức năng này giúp giảm thời gian thao tác khi số lượng báo cáo lớn.
+
+---
+
+# 📅 13. Nhật ký phát triển
+
+## Giai đoạn 1 — Cấu trúc & giao diện
+
+Đã thực hiện:
+
+* Khởi tạo Custom Module Odoo.
+* Xây dựng cấu trúc `models`, `views`, `security`, `data`.
+* Xây dựng `daily.report`.
+* Xây dựng `weekly.report`.
+* Xây dựng `task.presentation`.
+* Thiết kế Form View.
+* Thiết kế Tree/List View.
+* Thiết kế Search View.
+* Xây dựng Dashboard.
+* Thiết lập workflow:
+
+```text
+Draft → Submitted → Reviewed
+```
+
+---
+
+## Giai đoạn 2 — Phân quyền & bảo mật
+
+Đã thực hiện:
+
+* Tạo `ir.model.access.csv`.
+* Tạo Security Groups.
+* Phân quyền User/Admin.
+* Thiết lập Domain Filter.
+* Hạn chế quyền xóa.
+* Áp dụng Soft Delete / Archive.
+* Xử lý lỗi Access Error.
+
+---
+
+## Giai đoạn 3 — Tích hợp Project
+
+Đã thực hiện:
+
+* Kế thừa `project.project`.
+* Mapping Report với Task.
+* Sử dụng quan hệ `Many2many`.
+* Sử dụng `mapped()` để tổng hợp Task.
+* Tự động tạo Kanban Stage cho Project mới.
+* Áp dụng `@api.model_create_multi`.
+
+---
+
+## Giai đoạn 4 — Tự động hóa
+
+Đã thực hiện:
+
+* Xây dựng Cron Job.
+* Kiểm tra báo cáo chưa nộp.
+* Gửi cảnh báo lúc 17:00.
+* Xây dựng Batch Approve.
+* Tự động hóa các thao tác quản trị.
+
+---
+
+# 🐛 14. Troubleshooting
+
+## Lỗi 1 — "Stumbled upon some top-secret records... baked cookies"
+
+### Hiện tượng
+
+Thực tập sinh không thể tạo hoặc truy cập báo cáo.
+
+### Nguyên nhân
+
+Có thể do:
+
+* Thiếu `ir.model.access.csv`.
+* Chưa khai báo quyền cho model.
+* User đang là Portal User thay vì Internal User.
+* Security Group chưa được gán.
+
+### Khắc phục
+
+Kiểm tra:
+
+```text
+security/ir.model.access.csv
+```
+
+Đảm bảo quyền cơ bản:
+
+```text
+Read = 1
+Write = 1
+Create = 1
+Delete = 0
+```
+
+Sau đó kiểm tra:
+
+```text
+Settings
+→ Users
+→ User
+→ Access Rights
+```
+
+Đảm bảo tài khoản là **Internal User**.
+
+Cuối cùng Upgrade module.
+
+---
+
+# ❌ 15. Lỗi mất Menu
+
+## Hiện tượng
+
+Menu:
+
+* Weekly Report.
+* Task Presentation.
+* Daily Report.
+
+không xuất hiện.
+
+## Nguyên nhân
+
+Model chưa được khai báo quyền truy cập.
+
+Odoo có thể không hiển thị hoặc không cho truy cập model nếu thiếu Access Control.
+
+## Khắc phục
+
+Kiểm tra:
+
+```text
+security/ir.model.access.csv
+```
+
+Đảm bảo có quyền cho:
+
+```text
+daily.report
+weekly.report
+task.presentation
+```
+
+Sau đó Upgrade Module.
+
+---
+
+# ❌ 16. Lỗi "Manager is not set"
+
+## Hiện tượng
+
+Khi sử dụng Onboarding / Launch Plan, Odoo báo:
+
+```text
+Manager is not set
+```
+
+hoặc:
+
+```text
+Linked to a user
+```
+
+## Nguyên nhân
+
+Hồ sơ Employee chưa được liên kết đầy đủ với:
+
+* Manager.
+* User đăng nhập.
+
+## Khắc phục
+
+### Bước 1
+
+Vào:
+
+```text
+Settings
+→ Users
+→ Users
+```
+
+Tạo hoặc kiểm tra User.
+
+### Bước 2
+
+Vào:
+
+```text
+Employees
+→ Chọn Intern
+```
+
+Thiết lập:
+
+```text
+Manager
+```
+
+### Bước 3
+
+Trong HR Settings:
+
+```text
+Related User
+```
+
+Chọn User tương ứng.
+
+---
+
+# 🔒 17. Lỗi GitHub GH013 — Push Protection
+
+## Hiện tượng
+
+GitHub từ chối:
+
+```text
+GH013: Repository rule violations
+```
+
+Nguyên nhân có thể do GitHub phát hiện Secret/API Key trong commit.
+
+Ví dụ:
+
+```text
+HubSpot API Token
+```
+
+được ghi trực tiếp trong file log.
+
+---
+
+## Cách xử lý
+
+### Bước 1 — Xóa Secret khỏi file
+
+Ví dụ:
+
+```bash
+sed -i '30d' logs/24-08-2026.md
+```
+
+### Bước 2 — Commit lại
+
+```bash
+git add .
+git commit --amend --no-edit
+```
+
+### Bước 3 — Push lại
+
+```bash
+git push -u origin main
+```
+
+> **Lưu ý:** Nếu API Key đã từng được commit, chỉ xóa dòng trong file hiện tại chưa chắc đã loại bỏ Secret khỏi toàn bộ Git history. Với Secret thực tế, cần **revoke/rotate key** và xử lý Git history nếu cần.
+
+---
+
+# 🔐 18. Nguyên tắc bảo mật
+
+Không nên hardcode API Key, Password hoặc Token trực tiếp vào source code.
+
+Không nên:
+
+```python
+HUBSPOT_TOKEN = "pat-xxxxxxxx"
+```
+
+Nên sử dụng:
+
+```text
+Environment Variables
+```
+
+hoặc cơ chế Secret Management.
+
+Đồng thời nên thêm các file chứa Secret vào:
+
+```text
+.gitignore
+```
+
+Ví dụ:
+
+```gitignore
+.env
+*.secret
+config.local.py
+```
+
+---
+
+# 🐳 19. Triển khai với Docker
+
+Dự án được chạy trên:
+
+```text
+WSL Ubuntu
+      ↓
+Docker
+      ↓
+Odoo 17
+      ↓
+odoo-app
+```
+
+---
+
+## 19.1. Copy module vào Container
+
+Từ WSL:
+
+```bash
+docker cp \
+/home/huyduc/saigontrade-internship_2/custom_addons/intern_work_management \
+odoo-app:/mnt/extra-addons/
+```
+
+---
+
+## 19.2. Restart Odoo
+
+```bash
+docker restart odoo-app
+```
+
+Kiểm tra container:
+
+```bash
+docker ps
+```
+
+---
+
+## 19.3. Upgrade Module
+
+Trên giao diện Odoo:
+
+```text
+Apps
+   ↓
+Intern Work Management
+   ↓
+⋮
+   ↓
+Upgrade
+```
+
+Nếu module không xuất hiện:
+
+```text
+Apps
+→ Update Apps List
+```
+
+Sau đó tìm lại:
+
+```text
+Intern Work Management
+```
+
+---
+
+# 🧪 20. Quy trình cập nhật code đề xuất
+
+Mỗi khi chỉnh sửa source code:
+
+```text
+Sửa code
+   ↓
+Kiểm tra Python/XML
+   ↓
+Copy module vào Docker
+   ↓
+Restart Odoo
+   ↓
+Update/Upgrade Module
+   ↓
+Kiểm tra giao diện
+   ↓
+Kiểm tra quyền
+   ↓
+Kiểm tra log
+```
+
+Các lệnh cơ bản:
+
+```bash
+docker cp \
+/home/huyduc/saigontrade-internship_2/custom_addons/intern_work_management \
+odoo-app:/mnt/extra-addons/
+
+docker restart odoo-app
+
+docker logs --tail 100 odoo-app
+```
+
+---
+
+# 📊 21. Giá trị thực tiễn
+
+Module không chỉ phục vụ mục đích học tập mà còn hướng tới giải quyết các vấn đề thực tế trong quá trình quản lý thực tập sinh.
+
+## 21.1. Truy xuất dữ liệu dễ dàng
+
+Toàn bộ công việc được lưu trên hệ thống.
+
+Khi kết thúc kỳ thực tập, có thể:
+
+* Filter.
+* Group By.
+* Export.
+* Thống kê theo ngày.
+* Thống kê theo tuần.
+* Thống kê theo Task.
+
+Ví dụ:
+
+```text
+Intern
+   ↓
+Reports
+   ↓
+Group By → Week
+   ↓
+Task Statistics
+```
+
+Điều này giúp giảm việc phải tìm kiếm lại thông tin từ:
+
+* Zalo.
+* Messenger.
+* Email.
+* File Excel.
+* Ghi chú cá nhân.
+
+---
+
+# 📈 22. Hỗ trợ đánh giá thực tập sinh
+
+Dữ liệu đánh giá được lưu trực tiếp trên hệ thống.
+
+Có thể theo dõi:
+
+* Số lượng Task hoàn thành.
+* Số lượng báo cáo.
+* Tỷ lệ nộp báo cáo.
+* Điểm đánh giá.
+* Nhận xét của quản lý.
+* Các vấn đề thường gặp.
+* Mức độ tiến bộ theo thời gian.
+
+Từ đó có thể xây dựng cơ sở dữ liệu phục vụ đánh giá cuối kỳ.
+
+---
+
+# 🎓 23. Hỗ trợ báo cáo thực tập cuối khóa
+
+Hệ thống có thể trở thành nguồn dữ liệu thực tế phục vụ báo cáo thực tập.
+
+Ví dụ có thể sử dụng dữ liệu để thống kê:
+
+```text
+Tổng số ngày làm việc
+        ↓
+Tổng số báo cáo
+        ↓
+Tổng số Task
+        ↓
+Task hoàn thành
+        ↓
+Các vấn đề gặp phải
+        ↓
+Giải pháp đã thực hiện
+        ↓
+Kết quả đạt được
+```
+
+Các dữ liệu này có thể được sử dụng làm:
+
+* Bảng thống kê.
+* Biểu đồ.
+* Phụ lục báo cáo.
+* Minh chứng quá trình thực tập.
+* Cơ sở đánh giá kết quả thực tập.
+
+---
+
+# ⏱️ 24. Tiết kiệm thời gian quản lý
+
+Thay vì người quản lý phải kiểm tra thủ công từng thực tập sinh:
+
+```text
+Intern 1 → Báo cáo?
+Intern 2 → Báo cáo?
+Intern 3 → Báo cáo?
+Intern 4 → Báo cáo?
+...
+```
+
+Cron Job có thể tự động:
+
+```text
+17:00
+  ↓
+Check Reports
+  ↓
+Find Missing Reports
+  ↓
+Notify Intern
+```
+
+Dashboard giúp quản lý nhanh chóng xác định:
+
+* Ai chưa báo cáo.
+* Ai có nhiều Task.
+* Ai đang bị chậm tiến độ.
+* Báo cáo nào cần review.
+* Task nào chưa hoàn thành.
+
+---
+
+# 🧩 25. Quy trình nghiệp vụ tổng thể
+
+```text
+                    INTERN
+                       │
+                       ▼
+              ┌─────────────────┐
+              │   Daily Report  │
+              └────────┬────────┘
+                       │
+                       ▼
+                  Submit Report
+                       │
+                       ▼
+                  MANAGER REVIEW
+                       │
+             ┌─────────┴─────────┐
+             │                   │
+             ▼                   ▼
+          Approve             Revision
+             │                   │
+             │                   ▼
+             │              Intern sửa
+             │                   │
+             │                   └──────┐
+             │                          │
+             ▼                          ▼
+          Reviewed                  Review lại
+             │
+             ▼
+          Rating
+             │
+             ▼
+        Dashboard / KPI
+             │
+             ▼
+       Weekly Summary
+             │
+             ▼
+       Presentation
+```
+
+---
+
+# 🚀 26. Hướng phát triển tiếp theo
+
+Các chức năng có thể tiếp tục phát triển:
+
+## 26.1. Dashboard nâng cao
+
+* Biểu đồ theo ngày/tuần/tháng.
+* So sánh nhiều thực tập sinh.
+* Lọc theo Project.
+* Lọc theo Task.
+* Lọc theo khoảng thời gian tùy chọn.
+* Export dữ liệu.
+
+## 26.2. Field Mapping
+
+Cho phép Admin ánh xạ các trường dữ liệu mà không cần sửa code.
+
+Ví dụ:
+
+```text
+Nguồn dữ liệu
+     ↓
+Field Mapping
+     ↓
+Odoo Field
+```
+
+## 26.3. Báo cáo tự động
+
+Có thể phát triển:
+
+```text
+Daily Summary
+Weekly Summary
+Monthly Summary
+```
+
+và tự động tổng hợp dữ liệu.
+
+## 26.4. Notification nâng cao
+
+Có thể tích hợp:
+
+* Email.
+* Odoo Discuss.
+* Notification.
+* Webhook.
+* Các hệ thống quản lý khác.
+
+## 26.5. Đánh giá cuối kỳ
+
+Có thể xây dựng hệ thống Scorecard:
+
+```text
+Task Completion      30%
+Daily Reports        20%
+Technical Skills     20%
+Presentation         15%
+Problem Solving      15%
+--------------------------
+Total               100%
+```
+
+---
+
+# 📝 27. Kết luận
+
+**Intern Work Management** là một Custom Module trên Odoo 17 nhằm số hóa quy trình quản lý thực tập sinh từ lúc giao việc, thực hiện công việc, báo cáo hằng ngày, tổng hợp theo tuần cho đến thuyết trình và đánh giá.
+
+Điểm quan trọng của hệ thống là dữ liệu công việc được liên kết trực tiếp với **Project/Task**, đồng thời kết hợp **Security, Dashboard, Notification và Cron Job** để giảm thao tác thủ công.
+
+Hệ thống có thể tiếp tục mở rộng thành một nền tảng quản lý thực tập sinh hoàn chỉnh, phục vụ đồng thời cho:
+
+* Thực tập sinh.
+* Người hướng dẫn.
+* Quản lý.
+* Admin.
+* Bộ phận nhân sự.
+
+---
+
+# 📚 28. Thông tin Repository
+
+**Repository:**
+
+`saigontrade-internship`
+
+**Branch chính:**
+
+```text
+main
+```
+
+**Module:**
+
+```text
+custom_addons/intern_work_management
+```
+
+**Odoo:**
+
+```text
+Odoo 17
+```
+
+**Runtime:**
+
+```text
+Docker
+```
+
+**Development Environment:**
+
+```text
+WSL Ubuntu
+```
+
+---
+
+# ✅ 29. Checklist triển khai
+
+### Module
+
+* [x] `__manifest__.py`
+* [x] Models
+* [x] Views
+* [x] Security
+* [x] Access Control
+* [x] Cron Job
+* [x] Project Integration
+* [x] Dashboard
+
+### Daily Workflow
+
+* [x] Tạo Daily Report
+* [x] Submit Report
+* [x] Manager Review
+* [x] Request Revision
+* [x] Rating
+* [x] Notification
+
+### Project
+
+* [x] Mapping Report → Task
+* [x] Task Filtering
+* [x] Kanban Stage
+* [x] Task Statistics
+
+### Administration
+
+* [x] User Permission
+* [x] Admin Permission
+* [x] Batch Approve
+* [x] Dashboard
+* [x] Cron Reminder
+
+---
+
+## 📌 Phiên bản tài liệu
+
+```text
+Document: Intern Work Management
+Version: 1.0
+Platform: Odoo 17
+Environment: WSL + Docker
+Status: Development / Deployment
+```
+
+
+--------------------------------------------------
+📄 FILE: ./__init__.py
+--------------------------------------------------
+from . import models
+
+--------------------------------------------------
+📄 FILE: ./__manifest__.py
+--------------------------------------------------
+{
+    'name': 'Intern Work Management',
+    'version': '1.0',
+    'depends': ['base', 'project', 'hr', 'calendar', 'mail'],
+    'data': [
+        'security/ir.model.access.csv',
+        'security/security_rules.xml',
+        'data/cron.xml',
+        'views/dashboard_views.xml',
+        'views/daily_report_views.xml',
+        'views/weekly_report_views.xml',
+        'views/task_presentation_views.xml',
+        'views/menu_views.xml',
+        'views/project_views.xml',
+    ],
+    'installable': True,
+    'application': True,
+}
+
+
+--------------------------------------------------
+📄 FILE: ./data/cron.xml
+--------------------------------------------------
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="ir_cron_remind_daily_report" model="ir.cron">
+            <field name="name">Nhắc nhở TTS nộp Báo cáo ngày (17:00)</field>
+            <field name="model_id" ref="model_daily_report"/>
+            <field name="state">code</field>
+            <field name="code">model.cron_remind_daily_report()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+            <field name="active" eval="True"/>
+            <field name="nextcall" eval="(DateTime.now().replace(hour=10, minute=0, second=0)).strftime('%Y-%m-%d %H:%M:%S')" />
+        </record>
+    </data>
+</odoo>
+
+
+--------------------------------------------------
+📄 FILE: ./data/report_sequence.xml
+--------------------------------------------------
+
+
+--------------------------------------------------
+📄 FILE: ./models/__init__.py
+--------------------------------------------------
+from . import daily_report
+from . import task_presentation
+from . import work_feedback
+from . import weekly_report
+from . import dashboard
+from . import project
+
+
+--------------------------------------------------
+📄 FILE: ./models/daily_report.py
+--------------------------------------------------
+from odoo import models, fields, api
+from odoo.exceptions import ValidationError, UserError
+
+class DailyReport(models.Model):
+    _name = 'daily.report'
+    _description = 'Báo cáo hằng ngày'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
+
+    name = fields.Char(string='Tiêu đề', required=True, copy=False, default='Draft', tracking=True)
+    employee_id = fields.Many2one('hr.employee', string='Người báo cáo', required=True, default=lambda self: self.env.user.employee_id, tracking=True)
+    project_id = fields.Many2one("project.project", string="Dự án cá nhân", compute="_compute_project_id", store=True)
+    report_date = fields.Date(string='Ngày báo cáo', required=True, default=fields.Date.context_today, tracking=True)
+    need_support = fields.Boolean(string='Cần hỗ trợ gấp', tracking=True)
+    
+    work_summary = fields.Text(string='Mô tả công việc đã làm', tracking=True)
+    
+    completed_task_ids = fields.Many2many('project.task', 'daily_completed_task_rel', string='Task đã hoàn thành')
+    in_progress_task_ids = fields.Many2many('project.task', 'daily_progress_task_rel', string='Task đang thực hiện')
+    
+    problem_description = fields.Text(string='Vấn đề gặp phải', tracking=True)
+    solution_description = fields.Text(string='Cách giải quyết', tracking=True)
+    next_day_plan = fields.Text(string='Kế hoạch ngày mai', tracking=True)
+    
+    attachment_ids = fields.Many2many('ir.attachment', string='Tài liệu/Ảnh minh chứng')
+    support_response = fields.Text(string='Hướng dẫn/Hỗ trợ từ Admin', tracking=True)
+    manager_score = fields.Selection([('1','1 Sao'),('2','2 Sao'),('3','3 Sao'),('4','4 Sao'),('5','5 Sao')], string='Điểm đánh giá', tracking=True)
+    manager_feedback = fields.Text(string='Nhận xét của Quản lý', tracking=True)
+
+    state = fields.Selection([('draft', 'Nháp'), ('submitted', 'Đã nộp'), ('reviewed', 'Đã Review')], string='Trạng thái', default='draft', tracking=True)
+    active = fields.Boolean(string='Active', default=True, tracking=True)
+
+    def unlink(self):
+        for record in self:
+            if record.state != 'draft':
+                raise UserError("Hệ thống nghiêm cấm xóa vĩnh viễn báo cáo đã nộp! Vui lòng dùng tính năng Lưu Trữ.")
+        return super(DailyReport, self).unlink()
+
+    def action_submit(self):
+        for record in self:
+            record.state = 'submitted'
+            
+            # --- AUTO KANBAN LOGIC (CÓ SUDO VƯỢT QUYỀN) ---
+            if record.completed_task_ids:
+                for task in record.completed_task_ids:
+                    # 1. Dùng sudo() để tìm cột (phòng trường hợp bị giới hạn quyền đọc)
+                    done_stage = self.env['project.task.type'].sudo().search([
+                        ('project_ids', 'in', task.project_id.id),
+                        '|', ('name', 'ilike', 'Done'), ('name', 'ilike', 'Đã xong')
+                    ], limit=1)
+                    
+                    # 2. Dùng sudo() để ép hệ thống tạo cột bằng quyền Admin
+                    if not done_stage and task.project_id:
+                        done_stage = self.env['project.task.type'].sudo().create({
+                            'name': 'Đã xong (Done)',
+                            'project_ids': [(4, task.project_id.id)],
+                            'sequence': 99
+                        })
+                    
+                    # 3. Dùng sudo() để di chuyển Task sang cột mới
+                    if done_stage:
+                        task.sudo().stage_id = done_stage.id
+
+    def action_review(self):
+        for record in self:
+            if not record.manager_score:
+                raise ValidationError("Quản lý vui lòng chọn Điểm đánh giá (Số Sao) trước khi Chốt Review!")
+            record.state = 'reviewed'
+            if record.create_uid:
+                record.message_post(
+                    body=f"🎉 <b>BÁO CÁO ĐÃ ĐƯỢC CHỐT!</b><br/>Admin đã chấm <b>{record.manager_score} Sao</b> cho bạn.",
+                    partner_ids=[record.create_uid.partner_id.id],
+                    message_type='comment',
+                    subtype_xmlid='mail.mt_comment'
+                )
+
+    def action_resolve_support(self):
+        for record in self:
+            record.need_support = False
+
+    def action_request_revision(self):
+        for record in self:
+            record.state = 'draft'
+            if record.create_uid:
+                record.message_post(
+                    body="⚠️ <b>YÊU CẦU SỬA LẠI:</b> Admin đã trả lại báo cáo này. Vui lòng nộp lại nhé!",
+                    partner_ids=[record.create_uid.partner_id.id],
+                    message_type='comment',
+                    subtype_xmlid='mail.mt_comment'
+                )
+
+    def action_unlock_admin(self):
+        for record in self:
+            record.state = 'submitted'
+
+    def action_open_form_view(self):
+        self.ensure_one()
+        return {
+            'name': 'Chi tiết Báo cáo',
+            'type': 'ir.actions.act_window',
+            'res_model': 'daily.report',
+            'res_id': self.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }
+
+    def action_open_full_screen(self):
+        self.ensure_one()
+        return {
+            'name': 'Chi tiết Báo cáo',
+            'type': 'ir.actions.act_window',
+            'res_model': 'daily.report',
+            'res_id': self.id,
+            'view_mode': 'form',
+            'target': 'main',
+        }
+
+    @api.depends("employee_id")
+    def _compute_project_id(self):
+        for record in self:
+            if record.employee_id:
+                project = self.env["project.project"].sudo().search([("intern_id", "=", record.employee_id.id)], limit=1)
+                record.project_id = project.id if project else False
+            else:
+                record.project_id = False
+
+    @api.model
+    def cron_remind_daily_report(self):
+        today = fields.Date.context_today(self)
+        admin_group = self.env.ref('base.group_erp_manager')
+        employees = self.env['hr.employee'].search([('user_id', '!=', False)])
+        
+        for emp in employees:
+            if admin_group in emp.user_id.groups_id:
+                continue
+            report = self.search([
+                ('employee_id', '=', emp.id), 
+                ('report_date', '=', today), 
+                ('state', 'in', ['submitted', 'reviewed'])
+            ], limit=1)
+            
+            if not report:
+                emp.user_id.partner_id.message_post(
+                    body="⏰ <b>TÍT TÍT! NHẮC NHỞ TỰ ĐỘNG:</b><br/>Đã 17h00 rồi! Đừng quên nộp Báo cáo ngày hôm nay trên hệ thống nhé bạn ơi!",
+                    message_type='comment',
+                    subtype_xmlid='mail.mt_comment',
+                    author_id=self.env.ref('base.partner_root').id
+                )
+
+
+--------------------------------------------------
+📄 FILE: ./models/dashboard.py
+--------------------------------------------------
+from odoo import models, fields, api
+from datetime import timedelta
+import calendar
+
+class InternDashboard(models.Model):
+    _name = 'intern.dashboard'
+    _description = 'Bảng Thống Kê Tổng Quan'
+
+    name = fields.Char(default='Bảng Điều Khiển (KPI)')
+
+    total_reports = fields.Integer(compute='_compute_kpi')
+    total_tasks_done = fields.Integer(compute='_compute_kpi')
+    total_tasks_progress = fields.Integer(compute='_compute_kpi')
+    urgent_report_ids = fields.Many2many('daily.report', 'dash_urgent_rel', compute='_compute_urgent', string='Cần hỗ trợ gấp')
+
+    filter_date = fields.Date(string='Mốc thời gian', default=fields.Date.context_today)
+    filter_type = fields.Selection([('day', 'Theo Ngày'), ('week', 'Theo Tuần'), ('month', 'Theo Tháng')], string='Kiểu lọc', default='day')
+    filtered_report_ids = fields.Many2many('daily.report', 'dash_filtered_rel', compute='_compute_filtered_reports')
+
+    def _compute_kpi(self):
+        for rec in self:
+            # LỌC BỎ BẢN NHÁP: Admin chỉ thấy những gì đã nộp
+            reports = self.env['daily.report'].search([('state', '!=', 'draft')])
+            rec.total_reports = len(reports)
+            rec.total_tasks_done = len(reports.mapped('completed_task_ids'))
+            rec.total_tasks_progress = len(reports.mapped('in_progress_task_ids'))
+
+    def _compute_urgent(self):
+        for rec in self:
+            rec.urgent_report_ids = self.env['daily.report'].search([('need_support', '=', True), ('state', '!=', 'draft')]).ids
+
+    @api.depends('filter_date', 'filter_type')
+    def _compute_filtered_reports(self):
+        for rec in self:
+            if not rec.filter_date:
+                rec.filter_date = fields.Date.context_today(self)
+            
+            # ẨN BẢN NHÁP TRÊN DANH SÁCH BÁO CÁO CỦA DASHBOARD
+            domain = [('state', '!=', 'draft')]
+            
+            if rec.filter_type == 'day':
+                domain.append(('report_date', '=', rec.filter_date))
+            elif rec.filter_type == 'week':
+                start = rec.filter_date - timedelta(days=rec.filter_date.weekday())
+                end = start + timedelta(days=6)
+                domain.extend([('report_date', '>=', start), ('report_date', '<=', end)])
+            elif rec.filter_type == 'month':
+                start = rec.filter_date.replace(day=1)
+                last_day = calendar.monthrange(start.year, start.month)[1]
+                end = rec.filter_date.replace(day=last_day)
+                domain.extend([('report_date', '>=', start), ('report_date', '<=', end)])
+            
+            rec.filtered_report_ids = self.env['daily.report'].search(domain, order='report_date desc').ids
+
+    def action_open_reports(self):
+        return {
+            'name': 'Tất cả Báo Cáo',
+            'type': 'ir.actions.act_window',
+            'res_model': 'daily.report',
+            # CHẶN XEM NHÁP KHI BẤM VÀO NÚT TỔNG BÁO CÁO
+            'domain': [('state', '!=', 'draft')],
+            'view_mode': 'tree,form,graph,pivot',
+        }
+
+    def action_open_done_tasks(self):
+        task_ids = self.env['daily.report'].search([('state', '!=', 'draft')]).mapped('completed_task_ids').ids
+        return {
+            'name': 'Tasks Đã Hoàn Thành',
+            'type': 'ir.actions.act_window',
+            'res_model': 'project.task',
+            'domain': [('id', 'in', task_ids)],
+            'view_mode': 'tree,form',
+        }
+
+    def action_open_progress_tasks(self):
+        task_ids = self.env['daily.report'].search([('state', '!=', 'draft')]).mapped('in_progress_task_ids').ids
+        return {
+            'name': 'Tasks Đang Thực Hiện',
+            'type': 'ir.actions.act_window',
+            'res_model': 'project.task',
+            'domain': [('id', 'in', task_ids)],
+            'view_mode': 'tree,form',
+        }
+
+
+--------------------------------------------------
+📄 FILE: ./models/project.py
+--------------------------------------------------
+from odoo import models, fields, api
+from odoo.exceptions import UserError
+
+class Project(models.Model):
+    _inherit = 'project.project'
+
+    # Liên kết dự án với TTS
+    intern_id = fields.Many2one('hr.employee', string='Thực tập sinh chủ quản')
+    
+    # Các trường tính toán cho giao diện Cảnh báo ngoài bảng
+    report_count = fields.Integer(compute='_compute_report_stats', string='Tổng báo cáo')
+    pending_report_count = fields.Integer(compute='_compute_report_stats', string='Chờ duyệt')
+    last_report_date = fields.Date(compute='_compute_report_stats', string='Báo cáo gần nhất')
+
+    def _compute_report_stats(self):
+        for project in self:
+            if project.intern_id:
+                reports = self.env['daily.report'].search([('employee_id', '=', project.intern_id.id)])
+                project.report_count = len(reports)
+                project.pending_report_count = len(reports.filtered(lambda r: r.state == 'submitted'))
+                project.last_report_date = max(reports.mapped('report_date')) if reports else False
+            else:
+                project.report_count = 0
+                project.pending_report_count = 0
+                project.last_report_date = False
+
+    def action_open_intern_reports(self):
+        self.ensure_one()
+        return {
+            'name': f'Báo cáo của {self.intern_id.name}',
+            'type': 'ir.actions.act_window',
+            'res_model': 'daily.report',
+            'domain': [('employee_id', '=', self.intern_id.id)],
+            'view_mode': 'tree,form',
+            'context': {'default_employee_id': self.intern_id.id}
+        }
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        projects = super(Project, self).create(vals_list)
+        for project in projects:
+            stages = ['Cần làm (To Do)', 'Đang làm (In Progress)', 'Đã xong (Done)']
+            for seq, name in enumerate(stages):
+                self.env['project.task.type'].create({
+                    'name': name,
+                    'sequence': seq,
+                    'project_ids': [(4, project.id)]
+                })
+        return projects
+
+class ProjectTask(models.Model):
+    _inherit = 'project.task'
+
+    def action_split_subtasks(self):
+        for task in self:
+            if not task.user_ids or len(task.user_ids) <= 1:
+                raise UserError("Task này cần có từ 2 người phụ trách trở lên để có thể chia nhỏ!")
+            for user in task.user_ids:
+                self.env['project.task'].create({
+                    'name': f"{task.name} ({user.name})",
+                    'project_id': task.project_id.id,
+                    'parent_id': task.id,
+                    'user_ids': [(6, 0, [user.id])]
+                })
+            task.user_ids = [(5, 0, 0)]
+
+
+--------------------------------------------------
+📄 FILE: ./models/task_presentation.py
+--------------------------------------------------
+from odoo import models, fields, api
+
+class TaskPresentation(models.Model):
+    _name = 'task.presentation'
+    _description = 'Lịch Thuyết Trình'
+
+    name = fields.Char(string='Chủ đề thuyết trình', required=True)
+    presenter_id = fields.Many2one('hr.employee', string='Người trình bày', required=True, default=lambda self: self.env.user.employee_id)
+    presentation_date = fields.Datetime(string='Thời gian dự kiến', required=True)
+    
+    task_ids = fields.Many2many('project.task', string='Tasks Báo Cáo')
+    reviewer_ids = fields.Many2many('hr.employee', 'presentation_reviewer_rel', string='Người tham gia')
+    
+    # CẦU NỐI KÉO DỮ LIỆU ĐÁNH GIÁ VÀO
+    feedback_ids = fields.One2many('work.feedback', 'presentation_id', string='Nhận xét & Chấm điểm')
+
+    state = fields.Selection([
+        ('draft', 'Nháp'),
+        ('scheduled', 'Đã Lên Lịch'),
+        ('completed', 'Đã Hoàn Thành')
+    ], string='Trạng thái', default='draft')
+
+    def action_schedule(self):
+        for record in self:
+            record.state = 'scheduled'
+
+    def action_complete(self):
+        for record in self:
+            record.state = 'completed'
+
+
+--------------------------------------------------
+📄 FILE: ./models/weekly_report.py
+--------------------------------------------------
+from odoo import models, fields, api
+from odoo.exceptions import ValidationError
+
+class WeeklyReport(models.Model):
+    _name = 'weekly.report'
+    _description = 'Báo cáo tuần'
+
+    name = fields.Char(string='Tiêu đề', required=True, copy=False, default='Draft')
+    
+    # [TỐI ƯU 1] Xử lý an toàn khi tài khoản chưa link với Employee
+    employee_id = fields.Many2one(
+        'hr.employee', 
+        string='Người báo cáo', 
+        required=True, 
+        default=lambda self: self.env.user.employee_id.id if self.env.user.employee_id else False
+    )
+    start_date = fields.Date(string='Ngày bắt đầu tuần', required=True)
+    end_date = fields.Date(string='Ngày kết thúc tuần', required=True)
+    
+    # [TỐI ƯU 2] Chuyển thành trường tự động tính toán (Readonly)
+    completed_task_ids = fields.Many2many(
+        'project.task', 'weekly_completed_task_rel', 
+        string='Task đã hoàn thành', 
+        compute='_compute_tasks_from_daily', store=True, readonly=True
+    )
+    in_progress_task_ids = fields.Many2many(
+        'project.task', 'weekly_progress_task_rel', 
+        string='Task đang thực hiện', 
+        compute='_compute_tasks_from_daily', store=True, readonly=True
+    )
+    
+    issues_summary = fields.Text(string='Tổng hợp Vấn đề & Bài học')
+    next_week_plan = fields.Text(string='Kế hoạch tuần tới')
+    
+    manager_score = fields.Selection([('1','1 Sao'),('2','2 Sao'),('3','3 Sao'),('4','4 Sao'),('5','5 Sao')], string='Điểm đánh giá')
+    manager_feedback = fields.Text(string='Nhận xét của Quản lý')
+    
+    state = fields.Selection([('draft', 'Nháp'), ('submitted', 'Đã nộp'), ('reviewed', 'Đã Review')], string='Trạng thái', default='draft')
+
+    @api.constrains('employee_id')
+    def _check_employee(self):
+        for record in self:
+            if not record.employee_id:
+                raise ValidationError("Tài khoản của bạn chưa được liên kết với Hồ sơ nhân viên. Vui lòng liên hệ Admin!")
+
+    # Hàm tự động gom Task từ Báo cáo ngày
+    @api.depends('employee_id', 'start_date', 'end_date')
+    def _compute_tasks_from_daily(self):
+        for record in self:
+            if record.employee_id and record.start_date and record.end_date:
+                # Tìm các báo cáo ngày của nhân sự này trong phạm vi tuần (chỉ lấy báo cáo đã nộp hoặc đã review)
+                daily_reports = self.env['daily.report'].search([
+                    ('employee_id', '=', record.employee_id.id),
+                    ('report_date', '>=', record.start_date),
+                    ('report_date', '<=', record.end_date),
+                    ('state', 'in', ['submitted', 'reviewed'])
+                ])
+                
+                # Gom Task lại bằng mapped() (tự động loại bỏ trùng lặp) và gán vào Many2many
+                record.completed_task_ids = [(6, 0, daily_reports.mapped('completed_task_ids').ids)]
+                record.in_progress_task_ids = [(6, 0, daily_reports.mapped('in_progress_task_ids').ids)]
+            else:
+                record.completed_task_ids = [(5, 0, 0)]
+                record.in_progress_task_ids = [(5, 0, 0)]
+
+    def action_submit(self):
+        for record in self:
+            record.state = 'submitted'
+
+    def action_review(self):
+        for record in self:
+            record.state = 'reviewed'
+
+
+--------------------------------------------------
+📄 FILE: ./models/work_feedback.py
+--------------------------------------------------
+from odoo import models, fields, api
+
+class WorkFeedback(models.Model):
+    _name = 'work.feedback'
+    _description = 'Đánh giá / Feedback'
+    _rec_name = 'presentation_id'
+    
+    presentation_id = fields.Many2one('task.presentation', string='Buổi thuyết trình', required=True)
+    reviewer_id = fields.Many2one('hr.employee', string='Người đánh giá', default=lambda self: self.env.user.employee_id)
+    employee_id = fields.Many2one('hr.employee', related='presentation_id.presenter_id', string='Người nhận đánh giá', store=True)
+    
+    # Tiêu chí đánh giá (Chấm điểm 1-5 sao)
+    score_technical = fields.Selection([(str(i), str(i)) for i in range(1, 6)], string='Kỹ thuật (1-5)')
+    score_understanding = fields.Selection([(str(i), str(i)) for i in range(1, 6)], string='Mức độ hiểu (1-5)')
+    score_problem_solving = fields.Selection([(str(i), str(i)) for i in range(1, 6)], string='Giải quyết vấn đề (1-5)')
+    score_communication = fields.Selection([(str(i), str(i)) for i in range(1, 6)], string='Kỹ năng trình bày (1-5)')
+    
+    overall_score = fields.Float(string='Điểm tổng quát (Thang 10)', compute='_compute_overall_score', store=True)
+    comments = fields.Text(string='Nhận xét chi tiết')
+
+    @api.depends('score_technical', 'score_understanding', 'score_problem_solving', 'score_communication')
+    def _compute_overall_score(self):
+        for record in self:
+            scores = [
+                int(record.score_technical or 0),
+                int(record.score_understanding or 0),
+                int(record.score_problem_solving or 0),
+                int(record.score_communication or 0)
+            ]
+            total = sum(scores)
+            # 4 tiêu chí, điểm tối đa là 20. Quy đổi ra thang điểm 10.
+            record.overall_score = (total / 20.0) * 10 if total > 0 else 0.0
+
+
+--------------------------------------------------
+📄 FILE: ./project_overview.txt
+--------------------------------------------------
+=== CẤU TRÚC THƯ MỤC ===
+.
+|____README.md
+|____project_overview.txt
+|____models
+| |____weekly_report.py
+| |____task_presentation.py
+| |____dashboard.py
+| |____daily_report.py
+| |____work_feedback.py
+| |____project.py
+| |______init__.py
+|______manifest__.py
+|____data
+| |____report_sequence.xml
+| |____cron.xml
+|____views
+| |____task_presentation_views.xml
+| |____menu_views.xml
+| |____daily_report_views.xml
+| |____dashboard_views.xml
+| |____weekly_report_views.xml
+| |____work_feedback_views.xml
+|____security
+| |____security_rules.xml
+| |____security_groups.xml
+| |____ir.model.access.csv
+|______init__.py
+
+
+=== NỘI DUNG CODE ===
+-e 
+
+--- FILE: ./README.md ---
+# 🚀 Dự án Quản lý Thực tập sinh — Intern Work Management
+
+> **Custom Odoo Module hỗ trợ quản lý công việc, báo cáo, thuyết trình và đánh giá thực tập sinh**
+
+**Người phát triển:** Vũ Huy Đức
+**Đơn vị:** Đại học Quản lý và Công nghệ TP.HCM (UMT)
+**Môi trường phát triển:** WSL Ubuntu, Docker, Odoo 17
+**Container:** `odoo-app`
+**Repository:** `saigontrade-internship`
+
+---
+
+## 📌 1. Tổng quan dự án
+
+**Intern Work Management** là một Custom Module được xây dựng trên **Odoo 17**, nhằm hỗ trợ doanh nghiệp quản lý quá trình làm việc của thực tập sinh một cách tập trung.
+
+Hệ thống tập trung vào ba hoạt động chính:
+
+1. Ghi nhận công việc và kết quả làm việc hằng ngày.
+2. Quản lý báo cáo, thuyết trình và đánh giá định kỳ.
+3. Hỗ trợ người quản lý theo dõi tiến độ, duyệt báo cáo và đánh giá thực tập sinh.
+
+Module được tích hợp với các thành phần có sẵn của Odoo như:
+
+* **Project** — quản lý Project và Task.
+* **Employees** — quản lý thông tin thực tập sinh.
+* **Discuss** — thông báo và trao đổi.
+* **Users & Security** — quản lý tài khoản và phân quyền.
+* **Scheduled Actions / Cron** — tự động hóa các công việc định kỳ.
+
+---
+
+## 🎯 2. Mục tiêu hệ thống
+
+### Đối với thực tập sinh
+
+* Ghi nhận công việc đã thực hiện mỗi ngày.
+* Mô tả vấn đề gặp phải và cách giải quyết.
+* Liên kết báo cáo với Task thực tế.
+* Theo dõi trạng thái báo cáo.
+* Chuẩn bị nội dung cho các buổi thuyết trình.
+* Xem nhận xét và yêu cầu chỉnh sửa từ người quản lý.
+
+### Đối với người quản lý
+
+* Theo dõi tiến độ của từng thực tập sinh.
+* Kiểm tra báo cáo hằng ngày.
+* Duyệt hoặc yêu cầu chỉnh sửa báo cáo.
+* Đánh giá kết quả làm việc.
+* Theo dõi Task hoàn thành.
+* Quản lý lịch thuyết trình.
+* Xem Dashboard tổng quan.
+* Phát hiện những trường hợp chưa nộp báo cáo.
+
+### Đối với Admin
+
+* Quản lý người dùng và phân quyền.
+* Quản lý Project và Task.
+* Quản lý toàn bộ báo cáo.
+* Duyệt hàng loạt báo cáo/thuyết trình.
+* Theo dõi dữ liệu tổng hợp.
+* Quản lý cấu hình hệ thống.
+
+---
+
+# 🏗️ 3. Kiến trúc tổng thể
+
+```text
+                    ┌─────────────────────────┐
+                    │       Odoo 17           │
+                    │     Intern Work         │
+                    │      Management         │
+                    └────────────┬────────────┘
+                                 │
+             ┌───────────────────┼───────────────────┐
+             │                   │                   │
+             ▼                   ▼                   ▼
+      ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+      │ Daily Report│     │Weekly Report│     │ Presentation│
+      └──────┬──────┘     └──────┬──────┘     └──────┬──────┘
+             │                   │                   │
+             └───────────────────┼───────────────────┘
+                                 │
+                                 ▼
+                       ┌──────────────────┐
+                       │ Odoo Project     │
+                       │ Project / Task   │
+                       └────────┬─────────┘
+                                │
+                                ▼
+                       ┌──────────────────┐
+                       │ Dashboard / KPI  │
+                       └──────────────────┘
+```
+
+---
+
+# 📁 4. Cấu trúc thư mục
+
+Cấu trúc module được tổ chức theo chuẩn Custom Module của Odoo:
+
+```text
+intern_work_management/
+│
+├── __init__.py
+├── __manifest__.py
+│
+├── models/
+│   ├── __init__.py
+│   ├── daily_report.py
+│   ├── weekly_report.py
+│   ├── task_presentation.py
+│   └── project_project.py
+│
+├── views/
+│   ├── daily_report_views.xml
+│   ├── weekly_report_views.xml
+│   ├── task_presentation_views.xml
+│   ├── dashboard_views.xml
+│   └── project_views.xml
+│
+├── security/
+│   ├── security_groups.xml
+│   └── ir.model.access.csv
+│
+├── data/
+│   └── ir_cron.xml
+│
+└── static/
+    └── description/
+        └── icon.png
+```
+
+## 4.1. `__manifest__.py`
+
+File khai báo thông tin của module:
+
+* Tên module.
+* Phiên bản.
+* Mô tả.
+* Dependencies.
+* Danh sách XML/CSV cần load.
+* Category.
+* Application.
+
+Ví dụ:
+
+```python
+{
+    "name": "Intern Work Management",
+    "version": "17.0.1.0.0",
+    "category": "Project",
+    "summary": "Quản lý công việc và báo cáo thực tập sinh",
+    "depends": [
+        "base",
+        "project",
+        "hr",
+        "mail",
+    ],
+    "data": [
+        "security/security_groups.xml",
+        "security/ir.model.access.csv",
+        "data/ir_cron.xml",
+
+        "views/daily_report_views.xml",
+        "views/weekly_report_views.xml",
+        "views/task_presentation_views.xml",
+        "views/project_views.xml",
+        "views/dashboard_views.xml",
+    ],
+    "installable": True,
+    "application": True,
+}
+```
+
+---
+
+## 4.2. `models/`
+
+Chứa toàn bộ Python Model của module.
+
+### `daily_report.py`
+
+Quản lý báo cáo công việc cuối ngày.
+
+Các thông tin chính có thể bao gồm:
+
+* Thực tập sinh.
+* Ngày báo cáo.
+* Công việc đã thực hiện.
+* Kết quả đạt được.
+* Vấn đề gặp phải.
+* Cách giải quyết.
+* Task liên quan.
+* Trạng thái.
+* Nhận xét của quản lý.
+* Điểm đánh giá.
+
+Luồng trạng thái:
+
+```text
+Draft
+  │
+  ▼
+Submitted
+  │
+  ▼
+Reviewed
+```
+
+---
+
+### `weekly_report.py`
+
+Quản lý báo cáo tổng hợp theo tuần.
+
+Mục đích:
+
+* Tổng hợp công việc trong tuần.
+* Tổng hợp Task đã hoàn thành.
+* Tổng hợp vấn đề.
+* Chuẩn bị nội dung báo cáo.
+* Hỗ trợ đánh giá theo tuần.
+
+---
+
+### `task_presentation.py`
+
+Quản lý lịch và nội dung thuyết trình.
+
+Thông tin có thể bao gồm:
+
+* Người trình bày.
+* Chủ đề.
+* Ngày thuyết trình.
+* Task được trình bày.
+* Nội dung.
+* Trạng thái.
+* Nhận xét.
+* Điểm đánh giá.
+
+---
+
+### `project_project.py`
+
+Kế thừa model:
+
+```python
+project.project
+```
+
+Mục đích là tự động thiết lập cấu trúc Kanban cho Project mới.
+
+Ví dụ:
+
+```text
+To Do
+   ↓
+In Progress
+   ↓
+Done
+```
+
+Có thể sử dụng:
+
+```python
+@api.model_create_multi
+```
+
+để xử lý việc khởi tạo khi tạo Project.
+
+---
+
+# 🖥️ 5. Các tính năng chính
+
+## 5.1. Daily Report
+
+Thực tập sinh thực hiện báo cáo vào cuối mỗi ngày.
+
+Một báo cáo có thể bao gồm:
+
+| Trường          | Mô tả                  |
+| --------------- | ---------------------- |
+| Intern          | Người thực hiện        |
+| Date            | Ngày báo cáo           |
+| Work Done       | Công việc đã thực hiện |
+| Result          | Kết quả                |
+| Problem         | Vấn đề gặp phải        |
+| Solution        | Cách giải quyết        |
+| Tasks           | Task liên quan         |
+| Status          | Trạng thái             |
+| Manager Comment | Nhận xét               |
+| Rating          | Đánh giá               |
+
+---
+
+## 5.2. Weekly Report
+
+Weekly Report dùng để tổng hợp kết quả làm việc trong tuần.
+
+Ví dụ:
+
+```text
+Tuần 1
+├── Daily Report 01
+├── Daily Report 02
+├── Daily Report 03
+├── Daily Report 04
+└── Daily Report 05
+```
+
+Từ đó người quản lý có thể theo dõi:
+
+* Tổng số ngày đã báo cáo.
+* Tổng số Task.
+* Task đã hoàn thành.
+* Task đang thực hiện.
+* Các vấn đề phát sinh.
+* Nội dung đã học được.
+
+---
+
+## 5.3. Task Presentation
+
+Module hỗ trợ quản lý các buổi trình bày/thuyết trình.
+
+Quy trình:
+
+```text
+Tạo lịch
+    ↓
+Chuẩn bị nội dung
+    ↓
+Trình bày
+    ↓
+Manager Review
+    ↓
+Đánh giá
+```
+
+Lịch trình được thiết kế phù hợp với hoạt động của nhóm:
+
+* **Thứ 3:** họp / trình bày.
+* **Thứ 5:** họp / trình bày.
+* **Cuối mỗi ngày:** thực tập sinh nộp Daily Report.
+
+---
+
+# 🔗 6. Mapping Report với Project Task
+
+Một trong những chức năng quan trọng của module là liên kết báo cáo với Task.
+
+Quan hệ:
+
+```text
+Daily Report
+      │
+      │ Many2many
+      ▼
+Project Task
+```
+
+Ví dụ:
+
+```text
+Daily Report: 03/09/2026
+
+Công việc:
+- Xử lý lỗi Odoo XML
+- Tạo Dashboard
+- Kiểm tra phân quyền
+
+Tasks:
+├── Fix XML View
+├── Build Dashboard
+└── Security Configuration
+```
+
+Việc mapping giúp dữ liệu báo cáo phản ánh trực tiếp công việc thực tế.
+
+---
+
+# 🔐 7. Phân quyền & Bảo mật
+
+Hệ thống phân chia quyền theo vai trò.
+
+## 7.1. Intern / User
+
+Có quyền:
+
+* Xem báo cáo của mình.
+* Tạo báo cáo.
+* Chỉnh sửa báo cáo chưa gửi.
+* Gửi báo cáo.
+* Xem Task được giao.
+* Xem nhận xét của quản lý.
+
+Không được:
+
+* Xóa báo cáo đã gửi.
+* Chốt điểm.
+* Duyệt báo cáo của người khác.
+* Thay đổi dữ liệu của người khác.
+
+---
+
+## 7.2. Manager / Admin
+
+Có quyền:
+
+* Xem báo cáo.
+* Review báo cáo.
+* Yêu cầu chỉnh sửa.
+* Đánh giá.
+* Chốt điểm.
+* Quản lý Task.
+* Quản lý lịch thuyết trình.
+* Xem Dashboard.
+
+---
+
+## 7.3. Access Control
+
+File:
+
+```text
+security/ir.model.access.csv
+```
+
+Ví dụ quyền cơ bản:
+
+```text
+Read  | Write | Create | Delete
+  1   |   1   |   1    |   0
+```
+
+Đối với báo cáo, ưu tiên sử dụng **Archive / Soft Delete** thay vì xóa dữ liệu vĩnh viễn.
+
+---
+
+# 🔎 8. Domain Filter
+
+Thực tập sinh chỉ nên nhìn thấy những Task được giao cho mình.
+
+Ví dụ domain:
+
+```python
+[('user_ids', 'in', uid)]
+```
+
+Mục đích:
+
+```text
+User A
+   ↓
+Chỉ nhìn thấy Task của User A
+
+User B
+   ↓
+Chỉ nhìn thấy Task của User B
+```
+
+Điều này giúp hạn chế việc thực tập sinh xem hoặc báo cáo dựa trên công việc của người khác.
+
+---
+
+# 📊 9. Dashboard
+
+Dashboard cung cấp cái nhìn tổng quan cho người quản lý.
+
+Các chỉ số có thể bao gồm:
+
+```text
+┌──────────────────┐
+│ Tổng thực tập    │
+│       15         │
+└──────────────────┘
+
+┌──────────────────┐
+│ Báo cáo hôm nay  │
+│       12         │
+└──────────────────┘
+
+┌──────────────────┐
+│ Task hoàn thành  │
+│       38         │
+└──────────────────┘
+
+┌──────────────────┐
+│ Chưa nộp báo cáo │
+│        3         │
+└──────────────────┘
+```
+
+Dashboard hỗ trợ:
+
+* KPI.
+* Group By.
+* Filter.
+* Lọc theo thời gian.
+* Theo dõi trạng thái.
+* So sánh thực tập sinh.
+* Phát hiện báo cáo chưa nộp.
+* Theo dõi tiến độ Task.
+
+---
+
+# 🤖 10. Tự động hóa bằng Cron Job
+
+Hệ thống sử dụng **Scheduled Action / `ir.cron`** để tự động kiểm tra báo cáo.
+
+## Quy trình
+
+```text
+17:00 mỗi ngày
+       ↓
+Cron Job chạy
+       ↓
+Kiểm tra danh sách Intern
+       ↓
+Kiểm tra Daily Report
+       ↓
+Có báo cáo?
+   ┌───┴───┐
+  Có      Không
+   │        │
+   ▼        ▼
+Tiếp tục   Gửi cảnh báo
+```
+
+Mục đích:
+
+* Nhắc thực tập sinh chưa nộp báo cáo.
+* Giảm công việc kiểm tra thủ công.
+* Hạn chế tình trạng quên báo cáo.
+
+---
+
+# 🔔 11. Notification & Mention
+
+Khi quản lý yêu cầu sửa báo cáo:
+
+```text
+Manager
+   ↓
+Request Revision
+   ↓
+Notification
+   ↓
+Intern
+```
+
+Khi báo cáo được review:
+
+```text
+Daily Report
+     ↓
+Manager Review
+     ↓
+Comment + Rating
+     ↓
+Intern receives notification
+```
+
+Điều này giúp người thực tập sinh biết chính xác:
+
+* Báo cáo nào cần sửa.
+* Lý do cần sửa.
+* Nhận xét của quản lý.
+* Kết quả đánh giá.
+
+---
+
+# ⚙️ 12. Batch Approve
+
+Admin có thể duyệt nhiều bản ghi cùng lúc từ List View.
+
+Ví dụ:
+
+```text
+☑ Report #001
+☑ Report #002
+☑ Report #003
+☑ Report #004
+
+        ↓
+
+Batch Approve
+
+        ↓
+
+All → Reviewed
+```
+
+Chức năng này giúp giảm thời gian thao tác khi số lượng báo cáo lớn.
+
+---
+
+# 📅 13. Nhật ký phát triển
+
+## Giai đoạn 1 — Cấu trúc & giao diện
+
+Đã thực hiện:
+
+* Khởi tạo Custom Module Odoo.
+* Xây dựng cấu trúc `models`, `views`, `security`, `data`.
+* Xây dựng `daily.report`.
+* Xây dựng `weekly.report`.
+* Xây dựng `task.presentation`.
+* Thiết kế Form View.
+* Thiết kế Tree/List View.
+* Thiết kế Search View.
+* Xây dựng Dashboard.
+* Thiết lập workflow:
+
+```text
+Draft → Submitted → Reviewed
+```
+
+---
+
+## Giai đoạn 2 — Phân quyền & bảo mật
+
+Đã thực hiện:
+
+* Tạo `ir.model.access.csv`.
+* Tạo Security Groups.
+* Phân quyền User/Admin.
+* Thiết lập Domain Filter.
+* Hạn chế quyền xóa.
+* Áp dụng Soft Delete / Archive.
+* Xử lý lỗi Access Error.
+
+---
+
+## Giai đoạn 3 — Tích hợp Project
+
+Đã thực hiện:
+
+* Kế thừa `project.project`.
+* Mapping Report với Task.
+* Sử dụng quan hệ `Many2many`.
+* Sử dụng `mapped()` để tổng hợp Task.
+* Tự động tạo Kanban Stage cho Project mới.
+* Áp dụng `@api.model_create_multi`.
+
+---
+
+## Giai đoạn 4 — Tự động hóa
+
+Đã thực hiện:
+
+* Xây dựng Cron Job.
+* Kiểm tra báo cáo chưa nộp.
+* Gửi cảnh báo lúc 17:00.
+* Xây dựng Batch Approve.
+* Tự động hóa các thao tác quản trị.
+
+---
+
+# 🐛 14. Troubleshooting
+
+## Lỗi 1 — "Stumbled upon some top-secret records... baked cookies"
+
+### Hiện tượng
+
+Thực tập sinh không thể tạo hoặc truy cập báo cáo.
+
+### Nguyên nhân
+
+Có thể do:
+
+* Thiếu `ir.model.access.csv`.
+* Chưa khai báo quyền cho model.
+* User đang là Portal User thay vì Internal User.
+* Security Group chưa được gán.
+
+### Khắc phục
+
+Kiểm tra:
+
+```text
+security/ir.model.access.csv
+```
+
+Đảm bảo quyền cơ bản:
+
+```text
+Read = 1
+Write = 1
+Create = 1
+Delete = 0
+```
+
+Sau đó kiểm tra:
+
+```text
+Settings
+→ Users
+→ User
+→ Access Rights
+```
+
+Đảm bảo tài khoản là **Internal User**.
+
+Cuối cùng Upgrade module.
+
+---
+
+# ❌ 15. Lỗi mất Menu
+
+## Hiện tượng
+
+Menu:
+
+* Weekly Report.
+* Task Presentation.
+* Daily Report.
+
+không xuất hiện.
+
+## Nguyên nhân
+
+Model chưa được khai báo quyền truy cập.
+
+Odoo có thể không hiển thị hoặc không cho truy cập model nếu thiếu Access Control.
+
+## Khắc phục
+
+Kiểm tra:
+
+```text
+security/ir.model.access.csv
+```
+
+Đảm bảo có quyền cho:
+
+```text
+daily.report
+weekly.report
+task.presentation
+```
+
+Sau đó Upgrade Module.
+
+---
+
+# ❌ 16. Lỗi "Manager is not set"
+
+## Hiện tượng
+
+Khi sử dụng Onboarding / Launch Plan, Odoo báo:
+
+```text
+Manager is not set
+```
+
+hoặc:
+
+```text
+Linked to a user
+```
+
+## Nguyên nhân
+
+Hồ sơ Employee chưa được liên kết đầy đủ với:
+
+* Manager.
+* User đăng nhập.
+
+## Khắc phục
+
+### Bước 1
+
+Vào:
+
+```text
+Settings
+→ Users
+→ Users
+```
+
+Tạo hoặc kiểm tra User.
+
+### Bước 2
+
+Vào:
+
+```text
+Employees
+→ Chọn Intern
+```
+
+Thiết lập:
+
+```text
+Manager
+```
+
+### Bước 3
+
+Trong HR Settings:
+
+```text
+Related User
+```
+
+Chọn User tương ứng.
+
+---
+
+# 🔒 17. Lỗi GitHub GH013 — Push Protection
+
+## Hiện tượng
+
+GitHub từ chối:
+
+```text
+GH013: Repository rule violations
+```
+
+Nguyên nhân có thể do GitHub phát hiện Secret/API Key trong commit.
+
+Ví dụ:
+
+```text
+HubSpot API Token
+```
+
+được ghi trực tiếp trong file log.
+
+---
+
+## Cách xử lý
+
+### Bước 1 — Xóa Secret khỏi file
+
+Ví dụ:
+
+```bash
+sed -i '30d' logs/24-08-2026.md
+```
+
+### Bước 2 — Commit lại
+
+```bash
+git add .
+git commit --amend --no-edit
+```
+
+### Bước 3 — Push lại
+
+```bash
+git push -u origin main
+```
+
+> **Lưu ý:** Nếu API Key đã từng được commit, chỉ xóa dòng trong file hiện tại chưa chắc đã loại bỏ Secret khỏi toàn bộ Git history. Với Secret thực tế, cần **revoke/rotate key** và xử lý Git history nếu cần.
+
+---
+
+# 🔐 18. Nguyên tắc bảo mật
+
+Không nên hardcode API Key, Password hoặc Token trực tiếp vào source code.
+
+Không nên:
+
+```python
+HUBSPOT_TOKEN = "pat-xxxxxxxx"
+```
+
+Nên sử dụng:
+
+```text
+Environment Variables
+```
+
+hoặc cơ chế Secret Management.
+
+Đồng thời nên thêm các file chứa Secret vào:
+
+```text
+.gitignore
+```
+
+Ví dụ:
+
+```gitignore
+.env
+*.secret
+config.local.py
+```
+
+---
+
+# 🐳 19. Triển khai với Docker
+
+Dự án được chạy trên:
+
+```text
+WSL Ubuntu
+      ↓
+Docker
+      ↓
+Odoo 17
+      ↓
+odoo-app
+```
+
+---
+
+## 19.1. Copy module vào Container
+
+Từ WSL:
+
+```bash
+docker cp \
+/home/huyduc/saigontrade-internship_2/custom_addons/intern_work_management \
+odoo-app:/mnt/extra-addons/
+```
+
+---
+
+## 19.2. Restart Odoo
+
+```bash
+docker restart odoo-app
+```
+
+Kiểm tra container:
+
+```bash
+docker ps
+```
+
+---
+
+## 19.3. Upgrade Module
+
+Trên giao diện Odoo:
+
+```text
+Apps
+   ↓
+Intern Work Management
+   ↓
+⋮
+   ↓
+Upgrade
+```
+
+Nếu module không xuất hiện:
+
+```text
+Apps
+→ Update Apps List
+```
+
+Sau đó tìm lại:
+
+```text
+Intern Work Management
+```
+
+---
+
+# 🧪 20. Quy trình cập nhật code đề xuất
+
+Mỗi khi chỉnh sửa source code:
+
+```text
+Sửa code
+   ↓
+Kiểm tra Python/XML
+   ↓
+Copy module vào Docker
+   ↓
+Restart Odoo
+   ↓
+Update/Upgrade Module
+   ↓
+Kiểm tra giao diện
+   ↓
+Kiểm tra quyền
+   ↓
+Kiểm tra log
+```
+
+Các lệnh cơ bản:
+
+```bash
+docker cp \
+/home/huyduc/saigontrade-internship_2/custom_addons/intern_work_management \
+odoo-app:/mnt/extra-addons/
+
+docker restart odoo-app
+
+docker logs --tail 100 odoo-app
+```
+
+---
+
+# 📊 21. Giá trị thực tiễn
+
+Module không chỉ phục vụ mục đích học tập mà còn hướng tới giải quyết các vấn đề thực tế trong quá trình quản lý thực tập sinh.
+
+## 21.1. Truy xuất dữ liệu dễ dàng
+
+Toàn bộ công việc được lưu trên hệ thống.
+
+Khi kết thúc kỳ thực tập, có thể:
+
+* Filter.
+* Group By.
+* Export.
+* Thống kê theo ngày.
+* Thống kê theo tuần.
+* Thống kê theo Task.
+
+Ví dụ:
+
+```text
+Intern
+   ↓
+Reports
+   ↓
+Group By → Week
+   ↓
+Task Statistics
+```
+
+Điều này giúp giảm việc phải tìm kiếm lại thông tin từ:
+
+* Zalo.
+* Messenger.
+* Email.
+* File Excel.
+* Ghi chú cá nhân.
+
+---
+
+# 📈 22. Hỗ trợ đánh giá thực tập sinh
+
+Dữ liệu đánh giá được lưu trực tiếp trên hệ thống.
+
+Có thể theo dõi:
+
+* Số lượng Task hoàn thành.
+* Số lượng báo cáo.
+* Tỷ lệ nộp báo cáo.
+* Điểm đánh giá.
+* Nhận xét của quản lý.
+* Các vấn đề thường gặp.
+* Mức độ tiến bộ theo thời gian.
+
+Từ đó có thể xây dựng cơ sở dữ liệu phục vụ đánh giá cuối kỳ.
+
+---
+
+# 🎓 23. Hỗ trợ báo cáo thực tập cuối khóa
+
+Hệ thống có thể trở thành nguồn dữ liệu thực tế phục vụ báo cáo thực tập.
+
+Ví dụ có thể sử dụng dữ liệu để thống kê:
+
+```text
+Tổng số ngày làm việc
+        ↓
+Tổng số báo cáo
+        ↓
+Tổng số Task
+        ↓
+Task hoàn thành
+        ↓
+Các vấn đề gặp phải
+        ↓
+Giải pháp đã thực hiện
+        ↓
+Kết quả đạt được
+```
+
+Các dữ liệu này có thể được sử dụng làm:
+
+* Bảng thống kê.
+* Biểu đồ.
+* Phụ lục báo cáo.
+* Minh chứng quá trình thực tập.
+* Cơ sở đánh giá kết quả thực tập.
+
+---
+
+# ⏱️ 24. Tiết kiệm thời gian quản lý
+
+Thay vì người quản lý phải kiểm tra thủ công từng thực tập sinh:
+
+```text
+Intern 1 → Báo cáo?
+Intern 2 → Báo cáo?
+Intern 3 → Báo cáo?
+Intern 4 → Báo cáo?
+...
+```
+
+Cron Job có thể tự động:
+
+```text
+17:00
+  ↓
+Check Reports
+  ↓
+Find Missing Reports
+  ↓
+Notify Intern
+```
+
+Dashboard giúp quản lý nhanh chóng xác định:
+
+* Ai chưa báo cáo.
+* Ai có nhiều Task.
+* Ai đang bị chậm tiến độ.
+* Báo cáo nào cần review.
+* Task nào chưa hoàn thành.
+
+---
+
+# 🧩 25. Quy trình nghiệp vụ tổng thể
+
+```text
+                    INTERN
+                       │
+                       ▼
+              ┌─────────────────┐
+              │   Daily Report  │
+              └────────┬────────┘
+                       │
+                       ▼
+                  Submit Report
+                       │
+                       ▼
+                  MANAGER REVIEW
+                       │
+             ┌─────────┴─────────┐
+             │                   │
+             ▼                   ▼
+          Approve             Revision
+             │                   │
+             │                   ▼
+             │              Intern sửa
+             │                   │
+             │                   └──────┐
+             │                          │
+             ▼                          ▼
+          Reviewed                  Review lại
+             │
+             ▼
+          Rating
+             │
+             ▼
+        Dashboard / KPI
+             │
+             ▼
+       Weekly Summary
+             │
+             ▼
+       Presentation
+```
+
+---
+
+# 🚀 26. Hướng phát triển tiếp theo
+
+Các chức năng có thể tiếp tục phát triển:
+
+## 26.1. Dashboard nâng cao
+
+* Biểu đồ theo ngày/tuần/tháng.
+* So sánh nhiều thực tập sinh.
+* Lọc theo Project.
+* Lọc theo Task.
+* Lọc theo khoảng thời gian tùy chọn.
+* Export dữ liệu.
+
+## 26.2. Field Mapping
+
+Cho phép Admin ánh xạ các trường dữ liệu mà không cần sửa code.
+
+Ví dụ:
+
+```text
+Nguồn dữ liệu
+     ↓
+Field Mapping
+     ↓
+Odoo Field
+```
+
+## 26.3. Báo cáo tự động
+
+Có thể phát triển:
+
+```text
+Daily Summary
+Weekly Summary
+Monthly Summary
+```
+
+và tự động tổng hợp dữ liệu.
+
+## 26.4. Notification nâng cao
+
+Có thể tích hợp:
+
+* Email.
+* Odoo Discuss.
+* Notification.
+* Webhook.
+* Các hệ thống quản lý khác.
+
+## 26.5. Đánh giá cuối kỳ
+
+Có thể xây dựng hệ thống Scorecard:
+
+```text
+Task Completion      30%
+Daily Reports        20%
+Technical Skills     20%
+Presentation         15%
+Problem Solving      15%
+--------------------------
+Total               100%
+```
+
+---
+
+# 📝 27. Kết luận
+
+**Intern Work Management** là một Custom Module trên Odoo 17 nhằm số hóa quy trình quản lý thực tập sinh từ lúc giao việc, thực hiện công việc, báo cáo hằng ngày, tổng hợp theo tuần cho đến thuyết trình và đánh giá.
+
+Điểm quan trọng của hệ thống là dữ liệu công việc được liên kết trực tiếp với **Project/Task**, đồng thời kết hợp **Security, Dashboard, Notification và Cron Job** để giảm thao tác thủ công.
+
+Hệ thống có thể tiếp tục mở rộng thành một nền tảng quản lý thực tập sinh hoàn chỉnh, phục vụ đồng thời cho:
+
+* Thực tập sinh.
+* Người hướng dẫn.
+* Quản lý.
+* Admin.
+* Bộ phận nhân sự.
+
+---
+
+# 📚 28. Thông tin Repository
+
+**Repository:**
+
+`saigontrade-internship`
+
+**Branch chính:**
+
+```text
+main
+```
+
+**Module:**
+
+```text
+custom_addons/intern_work_management
+```
+
+**Odoo:**
+
+```text
+Odoo 17
+```
+
+**Runtime:**
+
+```text
+Docker
+```
+
+**Development Environment:**
+
+```text
+WSL Ubuntu
+```
+
+---
+
+# ✅ 29. Checklist triển khai
+
+### Module
+
+* [x] `__manifest__.py`
+* [x] Models
+* [x] Views
+* [x] Security
+* [x] Access Control
+* [x] Cron Job
+* [x] Project Integration
+* [x] Dashboard
+
+### Daily Workflow
+
+* [x] Tạo Daily Report
+* [x] Submit Report
+* [x] Manager Review
+* [x] Request Revision
+* [x] Rating
+* [x] Notification
+
+### Project
+
+* [x] Mapping Report → Task
+* [x] Task Filtering
+* [x] Kanban Stage
+* [x] Task Statistics
+
+### Administration
+
+* [x] User Permission
+* [x] Admin Permission
+* [x] Batch Approve
+* [x] Dashboard
+* [x] Cron Reminder
+
+---
+
+## 📌 Phiên bản tài liệu
+
+```text
+Document: Intern Work Management
+Version: 1.0
+Platform: Odoo 17
+Environment: WSL + Docker
+Status: Development / Deployment
+```
+-e 
+
+--- FILE: ./models/weekly_report.py ---
+from odoo import models, fields, api
+
+class WeeklyReport(models.Model):
+    _name = 'weekly.report'
+    _description = 'Báo cáo tuần'
+
+    name = fields.Char(string='Tiêu đề', required=True, copy=False, default='Draft')
+    employee_id = fields.Many2one('hr.employee', string='Người báo cáo', required=True, default=lambda self: self.env.user.employee_id)
+    start_date = fields.Date(string='Ngày bắt đầu tuần', required=True)
+    end_date = fields.Date(string='Ngày kết thúc tuần', required=True)
+    
+    completed_task_ids = fields.Many2many('project.task', 'weekly_completed_task_rel', string='Task đã hoàn thành')
+    in_progress_task_ids = fields.Many2many('project.task', 'weekly_progress_task_rel', string='Task đang thực hiện')
+    issues_summary = fields.Text(string='Tổng hợp Vấn đề & Bài học')
+    next_week_plan = fields.Text(string='Kế hoạch tuần tới')
+    
+    manager_score = fields.Selection([('1','1 Sao'),('2','2 Sao'),('3','3 Sao'),('4','4 Sao'),('5','5 Sao')], string='Điểm đánh giá')
+    manager_feedback = fields.Text(string='Nhận xét của Quản lý')
+    
+    state = fields.Selection([('draft', 'Nháp'), ('submitted', 'Đã nộp'), ('reviewed', 'Đã Review')], string='Trạng thái', default='draft')
+
+    def action_submit(self):
+        for record in self:
+            record.state = 'submitted'
+
+    def action_review(self):
+        for record in self:
+            record.state = 'reviewed'
+-e 
+
+--- FILE: ./models/task_presentation.py ---
+from odoo import models, fields, api
+
+class TaskPresentation(models.Model):
+    _name = 'task.presentation'
+    _description = 'Lịch Thuyết Trình'
+
+    name = fields.Char(string='Chủ đề thuyết trình', required=True)
+    presenter_id = fields.Many2one('hr.employee', string='Người trình bày', required=True, default=lambda self: self.env.user.employee_id)
+    presentation_date = fields.Datetime(string='Thời gian dự kiến', required=True)
+    
+    task_ids = fields.Many2many('project.task', string='Tasks Báo Cáo')
+    reviewer_ids = fields.Many2many('hr.employee', 'presentation_reviewer_rel', string='Người tham gia')
+    
+    # CẦU NỐI KÉO DỮ LIỆU ĐÁNH GIÁ VÀO
+    feedback_ids = fields.One2many('work.feedback', 'presentation_id', string='Nhận xét & Chấm điểm')
+
+    state = fields.Selection([
+        ('draft', 'Nháp'),
+        ('scheduled', 'Đã Lên Lịch'),
+        ('completed', 'Đã Hoàn Thành')
+    ], string='Trạng thái', default='draft')
+
+    def action_schedule(self):
+        for record in self:
+            record.state = 'scheduled'
+
+    def action_complete(self):
+        for record in self:
+            record.state = 'completed'
+-e 
+
+--- FILE: ./models/dashboard.py ---
+from odoo import models, fields, api
+from datetime import timedelta
+import calendar
+
+class InternDashboard(models.Model):
+    _name = 'intern.dashboard'
+    _description = 'Bảng Thống Kê Tổng Quan'
+
+    name = fields.Char(default='Bảng Điều Khiển (KPI)')
+
+    total_reports = fields.Integer(compute='_compute_kpi')
+    total_tasks_done = fields.Integer(compute='_compute_kpi')
+    total_tasks_progress = fields.Integer(compute='_compute_kpi')
+    urgent_report_ids = fields.Many2many('daily.report', 'dash_urgent_rel', compute='_compute_urgent', string='Cần hỗ trợ gấp')
+
+    filter_date = fields.Date(string='Mốc thời gian', default=fields.Date.context_today)
+    filter_type = fields.Selection([('day', 'Theo Ngày'), ('week', 'Theo Tuần'), ('month', 'Theo Tháng')], string='Kiểu lọc', default='day')
+    filtered_report_ids = fields.Many2many('daily.report', 'dash_filtered_rel', compute='_compute_filtered_reports')
+
+    def _compute_kpi(self):
+        for rec in self:
+            # LỌC BỎ BẢN NHÁP: Admin chỉ thấy những gì đã nộp
+            reports = self.env['daily.report'].search([('state', '!=', 'draft')])
+            rec.total_reports = len(reports)
+            rec.total_tasks_done = len(reports.mapped('completed_task_ids'))
+            rec.total_tasks_progress = len(reports.mapped('in_progress_task_ids'))
+
+    def _compute_urgent(self):
+        for rec in self:
+            rec.urgent_report_ids = self.env['daily.report'].search([('need_support', '=', True), ('state', '!=', 'draft')]).ids
+
+    @api.depends('filter_date', 'filter_type')
+    def _compute_filtered_reports(self):
+        for rec in self:
+            if not rec.filter_date:
+                rec.filter_date = fields.Date.context_today(self)
+            
+            # ẨN BẢN NHÁP TRÊN DANH SÁCH BÁO CÁO CỦA DASHBOARD
+            domain = [('state', '!=', 'draft')]
+            
+            if rec.filter_type == 'day':
+                domain.append(('report_date', '=', rec.filter_date))
+            elif rec.filter_type == 'week':
+                start = rec.filter_date - timedelta(days=rec.filter_date.weekday())
+                end = start + timedelta(days=6)
+                domain.extend([('report_date', '>=', start), ('report_date', '<=', end)])
+            elif rec.filter_type == 'month':
+                start = rec.filter_date.replace(day=1)
+                last_day = calendar.monthrange(start.year, start.month)[1]
+                end = rec.filter_date.replace(day=last_day)
+                domain.extend([('report_date', '>=', start), ('report_date', '<=', end)])
+            
+            rec.filtered_report_ids = self.env['daily.report'].search(domain, order='report_date desc').ids
+
+    def action_open_reports(self):
+        return {
+            'name': 'Tất cả Báo Cáo',
+            'type': 'ir.actions.act_window',
+            'res_model': 'daily.report',
+            # CHẶN XEM NHÁP KHI BẤM VÀO NÚT TỔNG BÁO CÁO
+            'domain': [('state', '!=', 'draft')],
+            'view_mode': 'tree,form,graph,pivot',
+        }
+
+    def action_open_done_tasks(self):
+        task_ids = self.env['daily.report'].search([('state', '!=', 'draft')]).mapped('completed_task_ids').ids
+        return {
+            'name': 'Tasks Đã Hoàn Thành',
+            'type': 'ir.actions.act_window',
+            'res_model': 'project.task',
+            'domain': [('id', 'in', task_ids)],
+            'view_mode': 'tree,form',
+        }
+
+    def action_open_progress_tasks(self):
+        task_ids = self.env['daily.report'].search([('state', '!=', 'draft')]).mapped('in_progress_task_ids').ids
+        return {
+            'name': 'Tasks Đang Thực Hiện',
+            'type': 'ir.actions.act_window',
+            'res_model': 'project.task',
+            'domain': [('id', 'in', task_ids)],
+            'view_mode': 'tree,form',
+        }
+-e 
+
+--- FILE: ./models/daily_report.py ---
+from odoo import models, fields, api
+from odoo.exceptions import ValidationError, UserError
+
+class DailyReport(models.Model):
+    _name = 'daily.report'
+    _description = 'Báo cáo hằng ngày'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
+
+    name = fields.Char(string='Tiêu đề', required=True, copy=False, default='Draft', tracking=True)
+    employee_id = fields.Many2one('hr.employee', string='Người báo cáo', required=True, default=lambda self: self.env.user.employee_id, tracking=True)
+    report_date = fields.Date(string='Ngày báo cáo', required=True, default=fields.Date.context_today, tracking=True)
+    need_support = fields.Boolean(string='Cần hỗ trợ gấp', tracking=True)
+    
+    completed_task_ids = fields.Many2many('project.task', 'daily_completed_task_rel', string='Task đã hoàn thành')
+    in_progress_task_ids = fields.Many2many('project.task', 'daily_progress_task_rel', string='Task đang thực hiện')
+    
+    problem_description = fields.Text(string='Vấn đề gặp phải', tracking=True)
+    solution_description = fields.Text(string='Cách giải quyết', tracking=True)
+    next_day_plan = fields.Text(string='Kế hoạch ngày mai', tracking=True)
+    
+    attachment_ids = fields.Many2many('ir.attachment', string='Tài liệu/Ảnh minh chứng')
+    support_response = fields.Text(string='Hướng dẫn/Hỗ trợ từ Admin', tracking=True)
+    manager_score = fields.Selection([('1','1 Sao'),('2','2 Sao'),('3','3 Sao'),('4','4 Sao'),('5','5 Sao')], string='Điểm đánh giá', tracking=True)
+    manager_feedback = fields.Text(string='Nhận xét của Quản lý', tracking=True)
+
+    state = fields.Selection([('draft', 'Nháp'), ('submitted', 'Đã nộp'), ('reviewed', 'Đã Review')], string='Trạng thái', default='draft', tracking=True)
+    active = fields.Boolean(string='Active', default=True, tracking=True)
+
+    def unlink(self):
+        for record in self:
+            if record.state != 'draft':
+                raise UserError("Hệ thống nghiêm cấm xóa vĩnh viễn báo cáo đã nộp! Vui lòng dùng tính năng Lưu Trữ.")
+        return super(DailyReport, self).unlink()
+
+    def action_submit(self):
+        for record in self:
+            record.state = 'submitted'
+
+    def action_review(self):
+        for record in self:
+            if not record.manager_score:
+                raise ValidationError("Quản lý vui lòng chọn Điểm đánh giá (Số Sao) trước khi Chốt Review!")
+            record.state = 'reviewed'
+            if record.create_uid:
+                record.message_post(
+                    body=f"🎉 <b>BÁO CÁO ĐÃ ĐƯỢC CHỐT!</b><br/>Admin đã chấm <b>{record.manager_score} Sao</b> cho bạn.",
+                    partner_ids=[record.create_uid.partner_id.id],
+                    message_type='comment',
+                    subtype_xmlid='mail.mt_comment'
+                )
+
+    def action_resolve_support(self):
+        for record in self:
+            record.need_support = False
+
+    def action_request_revision(self):
+        for record in self:
+            record.state = 'draft'
+            if record.create_uid:
+                record.message_post(
+                    body="⚠️ <b>YÊU CẦU SỬA LẠI:</b> Admin đã trả lại báo cáo này. Vui lòng nộp lại nhé!",
+                    partner_ids=[record.create_uid.partner_id.id],
+                    message_type='comment',
+                    subtype_xmlid='mail.mt_comment'
+                )
+
+    def action_unlock_admin(self):
+        for record in self:
+            record.state = 'submitted'
+
+    def action_open_form_view(self):
+        self.ensure_one()
+        return {
+            'name': 'Chi tiết Báo cáo',
+            'type': 'ir.actions.act_window',
+            'res_model': 'daily.report',
+            'res_id': self.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }
+
+    def action_open_full_screen(self):
+        self.ensure_one()
+        return {
+            'name': 'Chi tiết Báo cáo',
+            'type': 'ir.actions.act_window',
+            'res_model': 'daily.report',
+            'res_id': self.id,
+            'view_mode': 'form',
+            'target': 'main',
+        }
+
+    # ========================================================
+    # HÀM MỚI: ROBOT TỰ ĐỘNG NHẮC NHỞ (CRON JOB)
+    # ========================================================
+    @api.model
+    def cron_remind_daily_report(self):
+        today = fields.Date.context_today(self)
+        admin_group = self.env.ref('base.group_erp_manager')
+        
+        # Lấy danh sách tất cả nhân viên có tài khoản đăng nhập
+        employees = self.env['hr.employee'].search([('user_id', '!=', False)])
+        
+        for emp in employees:
+            # Bỏ qua Admin (Admin không cần nộp báo cáo)
+            if admin_group in emp.user_id.groups_id:
+                continue
+                
+            # Tìm xem hôm nay nhân viên này có báo cáo nào 'Đã nộp' hoặc 'Đã Review' chưa?
+            report = self.search([
+                ('employee_id', '=', emp.id), 
+                ('report_date', '=', today), 
+                ('state', 'in', ['submitted', 'reviewed'])
+            ], limit=1)
+            
+            # Nếu KHÔNG tìm thấy báo cáo đã nộp -> Nhắn tin nhắc nhở!
+            if not report:
+                emp.user_id.partner_id.message_post(
+                    body="⏰ <b>TÍT TÍT! NHẮC NHỞ TỰ ĐỘNG:</b><br/>Đã 17h00 rồi! Đừng quên nộp Báo cáo ngày hôm nay trên hệ thống nhé bạn ơi!",
+                    message_type='comment',
+                    subtype_xmlid='mail.mt_comment',
+                    author_id=self.env.ref('base.partner_root').id  # Tin nhắn gửi từ System/OdooBot
+                )
+-e 
+
+--- FILE: ./models/work_feedback.py ---
+from odoo import models, fields, api
+
+class WorkFeedback(models.Model):
+    _name = 'work.feedback'
+    _description = 'Đánh giá / Feedback'
+    _rec_name = 'presentation_id'
+    
+    presentation_id = fields.Many2one('task.presentation', string='Buổi thuyết trình', required=True)
+    reviewer_id = fields.Many2one('hr.employee', string='Người đánh giá', default=lambda self: self.env.user.employee_id)
+    employee_id = fields.Many2one('hr.employee', related='presentation_id.presenter_id', string='Người nhận đánh giá', store=True)
+    
+    # Tiêu chí đánh giá (Chấm điểm 1-5 sao)
+    score_technical = fields.Selection([(str(i), str(i)) for i in range(1, 6)], string='Kỹ thuật (1-5)')
+    score_understanding = fields.Selection([(str(i), str(i)) for i in range(1, 6)], string='Mức độ hiểu (1-5)')
+    score_problem_solving = fields.Selection([(str(i), str(i)) for i in range(1, 6)], string='Giải quyết vấn đề (1-5)')
+    score_communication = fields.Selection([(str(i), str(i)) for i in range(1, 6)], string='Kỹ năng trình bày (1-5)')
+    
+    overall_score = fields.Float(string='Điểm tổng quát (Thang 10)', compute='_compute_overall_score', store=True)
+    comments = fields.Text(string='Nhận xét chi tiết')
+
+    @api.depends('score_technical', 'score_understanding', 'score_problem_solving', 'score_communication')
+    def _compute_overall_score(self):
+        for record in self:
+            scores = [
+                int(record.score_technical or 0),
+                int(record.score_understanding or 0),
+                int(record.score_problem_solving or 0),
+                int(record.score_communication or 0)
+            ]
+            total = sum(scores)
+            # 4 tiêu chí, điểm tối đa là 20. Quy đổi ra thang điểm 10.
+            record.overall_score = (total / 20.0) * 10 if total > 0 else 0.0
+-e 
+
+--- FILE: ./models/project.py ---
+from odoo import models, api
+
+class Project(models.Model):
+    _inherit = 'project.project'
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        # 1. Để Odoo tạo Dự án như bình thường
+        projects = super(Project, self).create(vals_list)
+        
+        # 2. Ngay sau khi tạo xong, ép hệ thống đẻ ra 3 cột
+        for project in projects:
+            stages = ['Cần làm (To Do)', 'Đang làm (In Progress)', 'Đã xong (Done)']
+            for seq, name in enumerate(stages):
+                self.env['project.task.type'].create({
+                    'name': name,
+                    'sequence': seq,
+                    'project_ids': [(4, project.id)]
+                })
+        return projects
+-e 
+
+--- FILE: ./models/__init__.py ---
+from . import daily_report
+from . import task_presentation
+from . import work_feedback
+from . import weekly_report
+from . import dashboard
+from . import project
+-e 
+
+--- FILE: ./__manifest__.py ---
+{
+    'name': 'Intern Work Management',
+    'version': '1.0',
+    'depends': ['base', 'project', 'hr', 'calendar', 'mail'],
+    'data': [
+        'security/ir.model.access.csv',
+        'security/security_rules.xml',
+        'views/dashboard_views.xml',
+        'views/daily_report_views.xml',
+        'views/weekly_report_views.xml',
+        'views/task_presentation_views.xml',
+        'views/menu_views.xml',
+    ],
+    'installable': True,
+    'application': True,
+}
+-e 
+
+--- FILE: ./data/report_sequence.xml ---
+-e 
+
+--- FILE: ./data/cron.xml ---
+-e 
+
+--- FILE: ./views/task_presentation_views.xml ---
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_task_presentation_tree" model="ir.ui.view">
+        <field name="name">task.presentation.tree</field>
+        <field name="model">task.presentation</field>
+        <field name="arch" type="xml">
+            <tree string="Lịch Thuyết Trình">
+                <field name="name"/>
+                <field name="presenter_id"/>
+                <field name="presentation_date"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-warning="state == 'scheduled'" decoration-success="state == 'completed'"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_task_presentation_form" model="ir.ui.view">
+        <field name="name">task.presentation.form</field>
+        <field name="model">task.presentation</field>
+        <field name="arch" type="xml">
+            <form string="Lịch Thuyết Trình">
+                <header>
+                    <button name="action_schedule" string="Lên Lịch" type="object" class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_complete" string="Đã Hoàn Thành" type="object" class="oe_highlight" invisible="state != 'scheduled'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,scheduled,completed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="Ví dụ: Demo sản phẩm App..."/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="presenter_id"/>
+                            <field name="presentation_date"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Nội Dung Báo Cáo">
+                            <group>
+                                <field name="task_ids" widget="many2many_tags"/>
+                                <field name="reviewer_ids" widget="many2many_tags"/>
+                            </group>
+                        </page>
+                        <!-- GIAO DIỆN ĐÁNH GIÁ TRỰC TIẾP TẠI ĐÂY -->
+                        <page string="Đánh Giá Của Admin" invisible="state == 'draft'">
+                            <field name="feedback_ids" context="{'default_employee_id': presenter_id}">
+                                <tree editable="bottom">
+                                    <field name="reviewer_id" string="Người chấm"/>
+                                    <field name="score_technical" widget="priority" string="Kỹ thuật"/>
+                                    <field name="score_communication" widget="priority" string="Trình bày"/>
+                                    <field name="comments" string="Nhận xét chi tiết"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_task_presentation" model="ir.actions.act_window">
+        <field name="name">Lịch Thuyết Trình</field>
+        <field name="res_model">task.presentation</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>
+-e 
+
+--- FILE: ./views/menu_views.xml ---
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_intern_work_root" name="Intern Work" sequence="10" web_icon="project,static/description/icon.png"/>
+    
+    <menuitem id="menu_intern_dashboard" name="Tổng Quan (KPI)" parent="menu_intern_work_root" action="action_intern_dashboard" sequence="5"/>
+    
+    <menuitem id="menu_intern_reports" name="Báo Cáo" parent="menu_intern_work_root" sequence="10"/>
+    <menuitem id="menu_daily_report" name="Báo Cáo Ngày" parent="menu_intern_reports" action="action_daily_report" sequence="10"/>
+    <menuitem id="menu_weekly_report" name="Báo Cáo Tuần" parent="menu_intern_reports" action="action_weekly_report" sequence="20"/>
+
+    <menuitem id="menu_intern_reviews" name="Thuyết Trình" parent="menu_intern_work_root" sequence="20"/>
+    <menuitem id="menu_task_presentation" name="Lịch Thuyết Trình" parent="menu_intern_reviews" action="action_task_presentation" sequence="10"/>
+</odoo>
+-e 
+
+--- FILE: ./views/daily_report_views.xml ---
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_daily_report_search" model="ir.ui.view">
+        <field name="name">daily.report.search</field>
+        <field name="model">daily.report</field>
+        <field name="priority" eval="1"/>
+        <field name="arch" type="xml">
+            <search string="Tìm kiếm Báo Cáo">
+                <field name="name" string="Tiêu đề / Kế hoạch" filter_domain="['|', ('name', 'ilike', self), ('next_day_plan', 'ilike', self)]"/>
+                <field name="employee_id" string="Tên Thực tập sinh"/>
+                <field name="report_date" string="Ngày báo cáo"/>
+                <separator/>
+                <filter string="🚨 Cần hỗ trợ gấp" name="need_support" domain="[('need_support', '=', True)]"/>
+                <filter string="📝 Đang Nháp / Bị trả lại" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="📤 Đã Nộp" name="submitted" domain="[('state', '=', 'submitted')]"/>
+                <filter string="✅ Đã Review" name="reviewed" domain="[('state', '=', 'reviewed')]"/>
+                <separator/>
+                <filter string="🗑️ Báo Cáo Đã Lưu Trữ" name="archived" domain="[('active', '=', False)]"/>
+                <group expand="0" string="Gom nhóm theo...">
+                    <filter string="Người báo cáo" name="group_by_employee" context="{'group_by': 'employee_id'}"/>
+                    <filter string="Trạng thái" name="group_by_state" context="{'group_by': 'state'}"/>
+                    <filter string="Ngày báo cáo" name="group_by_date" context="{'group_by': 'report_date:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_daily_report_tree" model="ir.ui.view">
+        <field name="name">daily.report.tree</field>
+        <field name="model">daily.report</field>
+        <field name="arch" type="xml">
+            <tree string="Daily Reports">
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="report_date"/>
+                <field name="need_support" widget="boolean_toggle" readonly="1"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state == 'reviewed'"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_daily_report_form" model="ir.ui.view">
+        <field name="name">daily.report.form</field>
+        <field name="model">daily.report</field>
+        <field name="arch" type="xml">
+            <form string="Daily Report">
+                <header>
+                    <button name="action_open_full_screen" string="🖥️ Mở Toàn Màn Hình" type="object" class="btn-info" invisible="not context.get('show_fullscreen_btn')"/>
+                    <button name="action_submit" string="Nộp Báo Cáo" type="object" class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_request_revision" string="🔄 Yêu cầu sửa lại" type="object" class="btn-secondary" invisible="state != 'submitted'" groups="base.group_erp_manager"/>
+                    <button name="action_unlock_admin" string="🔓 Mở Khóa" type="object" class="btn-secondary" invisible="state != 'reviewed'" groups="base.group_erp_manager"/>
+                    <button name="action_resolve_support" string="Đã xử lý hỗ trợ" type="object" class="oe_highlight btn-warning" invisible="not need_support" groups="base.group_erp_manager"/>
+                    <button name="action_review" string="Lưu &amp; Chốt Điểm" type="object" class="oe_highlight" invisible="state != 'submitted'" groups="base.group_erp_manager"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submitted,reviewed"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="Đã Lưu Trữ" bg_color="bg-danger" invisible="active"/>
+                    <field name="active" invisible="1"/>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="state != 'draft'"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="employee_id" readonly="state != 'draft'"/>
+                            <field name="report_date" readonly="state != 'draft'"/>
+                        </group>
+                        <group>
+                            <field name="need_support" widget="boolean_toggle" readonly="state != 'draft'"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Công Việc">
+                            <group>
+                                <!-- VÁ LỖ HỔNG: TTS CHỈ THẤY TASK CỦA CHÍNH MÌNH (domain) -->
+                                <field name="completed_task_ids" widget="many2many_tags" readonly="state != 'draft'" domain="[('user_ids', 'in', uid)]"/>
+                                <field name="in_progress_task_ids" widget="many2many_tags" readonly="state != 'draft'" domain="[('user_ids', 'in', uid)]"/>
+                                <field name="attachment_ids" widget="many2many_binary" readonly="state != 'draft'"/>
+                            </group>
+                        </page>
+                        <page string="Vấn Đề &amp; Giải Pháp">
+                            <group>
+                                <field name="problem_description" readonly="state != 'draft'"/>
+                                <field name="solution_description" readonly="state != 'draft'"/>
+                                <field name="next_day_plan" readonly="state != 'draft'"/>
+                            </group>
+                        </page>
+                        <page string="Đánh Giá Của Admin" invisible="state == 'draft'">
+                            <group>
+                                <field name="support_response" placeholder="Admin nhập hướng dẫn xử lý vấn đề..." readonly="state == 'reviewed'"/>
+                                <field name="manager_score" widget="priority" readonly="state == 'reviewed'"/>
+                                <field name="manager_feedback" placeholder="Admin nhập nhận xét đánh giá..." readonly="state == 'reviewed'"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_daily_report" model="ir.actions.act_window">
+        <field name="name">Báo Cáo Ngày</field>
+        <field name="res_model">daily.report</field>
+        <field name="view_mode">tree,form,graph,pivot</field>
+        <field name="search_view_id" ref="view_daily_report_search"/>
+    </record>
+</odoo>
+-e 
+
+--- FILE: ./views/dashboard_views.xml ---
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_intern_dashboard_form" model="ir.ui.view">
+        <field name="name">intern.dashboard.form</field>
+        <field name="model">intern.dashboard</field>
+        <field name="arch" type="xml">
+            <form create="false" delete="false">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_reports" type="object" class="oe_stat_button" icon="fa-file-text-o">
+                            <field name="total_reports" widget="statinfo" string="Tổng Báo Cáo"/>
+                        </button>
+                        <button name="action_open_progress_tasks" type="object" class="oe_stat_button" icon="fa-spinner">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value text-warning"><field name="total_tasks_progress"/></span>
+                                <span class="o_stat_text">Task Đang Làm</span>
+                            </div>
+                        </button>
+                        <button name="action_open_done_tasks" type="object" class="oe_stat_button" icon="fa-check-circle">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value text-success"><field name="total_tasks_done"/></span>
+                                <span class="o_stat_text">Task Đã Xong</span>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <div class="oe_title mt-4 mb-4">
+                        <h1>BẢNG ĐIỀU KHIỂN TỔNG QUAN</h1>
+                    </div>
+
+                    <notebook>
+                        <page string="🚨 CẦN HỖ TRỢ GẤP">
+                            <!-- TRUYỀN NGỮ CẢNH YÊU CẦU HIỆN NÚT VÀO ĐÂY -->
+                            <field name="urgent_report_ids" readonly="1" context="{'show_fullscreen_btn': True}">
+                                <tree>
+                                    <field name="name"/>
+                                    <field name="employee_id"/>
+                                    <field name="report_date"/>
+                                    <field name="problem_description" string="Mô tả vấn đề"/>
+                                    <button name="action_open_form_view" string="Mở Xem" type="object" class="btn-sm btn-primary"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="📊 DANH SÁCH BÁO CÁO">
+                            <group col="4">
+                                <field name="filter_type"/>
+                                <field name="filter_date"/>
+                            </group>
+                            <!-- TRUYỀN NGỮ CẢNH YÊU CẦU HIỆN NÚT VÀO ĐÂY -->
+                            <field name="filtered_report_ids" readonly="1" context="{'show_fullscreen_btn': True}">
+                                <tree>
+                                    <field name="name"/>
+                                    <field name="employee_id"/>
+                                    <field name="report_date"/>
+                                    <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state == 'reviewed'"/>
+                                    <button name="action_open_form_view" string="Mở Xem" type="object" class="btn-sm btn-secondary"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_intern_dashboard" model="ir.actions.server">
+        <field name="name">Tổng Quan KPI</field>
+        <field name="model_id" ref="model_intern_dashboard"/>
+        <field name="state">code</field>
+        <field name="code">
+record = env['intern.dashboard'].search([], limit=1)
+if not record:
+    record = env['intern.dashboard'].create({'name': 'Dashboard'})
+action = {
+    'type': 'ir.actions.act_window',
+    'name': 'Tổng Quan',
+    'res_model': 'intern.dashboard',
+    'res_id': record.id,
+    'view_mode': 'form',
+    'target': 'current',
+}
+        </field>
+    </record>
+</odoo>
+-e 
+
+--- FILE: ./views/weekly_report_views.xml ---
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_weekly_report_tree" model="ir.ui.view">
+        <field name="name">weekly.report.tree</field>
+        <field name="model">weekly.report</field>
+        <field name="arch" type="xml">
+            <tree string="Weekly Reports">
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="start_date"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state == 'reviewed'"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_weekly_report_form" model="ir.ui.view">
+        <field name="name">weekly.report.form</field>
+        <field name="model">weekly.report</field>
+        <field name="arch" type="xml">
+            <form string="Weekly Report">
+                <header>
+                    <button name="action_submit" string="Nộp Báo Cáo" type="object" class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_review" string="Lưu &amp; Chốt Điểm" type="object" class="oe_highlight" invisible="state != 'submitted'" groups="base.group_erp_manager"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submitted,reviewed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="state != 'draft'"/></h1>
+                    </div>
+                    <group>
+                        <group><field name="employee_id" readonly="state != 'draft'"/></group>
+                        <group>
+                            <field name="start_date" readonly="state != 'draft'"/>
+                            <field name="end_date" readonly="state != 'draft'"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Tổng Hợp Công Việc">
+                            <group>
+                                <field name="completed_task_ids" widget="many2many_tags" readonly="state != 'draft'"/>
+                                <field name="in_progress_task_ids" widget="many2many_tags" readonly="state != 'draft'"/>
+                            </group>
+                        </page>
+                        <page string="Vấn Đề &amp; Kế Hoạch">
+                            <group>
+                                <field name="issues_summary" readonly="state != 'draft'"/>
+                                <field name="next_week_plan" readonly="state != 'draft'"/>
+                            </group>
+                        </page>
+                        <page string="Đánh Giá Của Admin" invisible="state == 'draft'">
+                            <group>
+                                <field name="manager_score" widget="priority" readonly="state == 'reviewed'"/>
+                                <field name="manager_feedback" placeholder="Admin nhập nhận xét tại đây..." readonly="state == 'reviewed'"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_weekly_report" model="ir.actions.act_window">
+        <field name="name">Báo Cáo Tuần</field>
+        <field name="res_model">weekly.report</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>
+-e 
+
+--- FILE: ./views/work_feedback_views.xml ---
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_work_feedback_tree" model="ir.ui.view">
+        <field name="name">work.feedback.tree</field>
+        <field name="model">work.feedback</field>
+        <field name="arch" type="xml">
+            <tree string="Feedback">
+                <field name="presentation_id"/>
+                <field name="employee_id"/>
+                <field name="reviewer_id"/>
+                <field name="overall_score" widget="progressbar"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_work_feedback_form" model="ir.ui.view">
+        <field name="name">work.feedback.form</field>
+        <field name="model">work.feedback</field>
+        <field name="arch" type="xml">
+            <form string="Feedback">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="presentation_id"/>
+                            <field name="employee_id"/>
+                            <field name="reviewer_id"/>
+                        </group>
+                        <group>
+                            <field name="overall_score" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Tiêu Chí Đánh Giá (1-5 Sao)">
+                        <group>
+                            <field name="score_technical" widget="priority"/>
+                            <field name="score_understanding" widget="priority"/>
+                        </group>
+                        <group>
+                            <field name="score_problem_solving" widget="priority"/>
+                            <field name="score_communication" widget="priority"/>
+                        </group>
+                    </group>
+                    <group string="Nhận Xét">
+                        <field name="comments" nolabel="1" placeholder="Nhập nhận xét chi tiết..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_work_feedback" model="ir.actions.act_window">
+        <field name="name">Phản Hồi &amp; Đánh Giá</field>
+        <field name="res_model">work.feedback</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>
+-e 
+
+--- FILE: ./security/security_rules.xml ---
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <!-- 1. QUY TẮC CHO BÁO CÁO NGÀY -->
+        <record id="rule_daily_report_intern" model="ir.rule">
+            <field name="name">Thực tập sinh chỉ xem Báo cáo ngày của mình</field>
+            <field name="model_id" ref="model_daily_report"/>
+            <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+        <record id="rule_daily_report_manager" model="ir.rule">
+            <field name="name">Quản lý xem tất cả Báo cáo ngày</field>
+            <field name="model_id" ref="model_daily_report"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('base.group_erp_manager'))]"/>
+        </record>
+
+        <!-- 2. QUY TẮC CHO BÁO CÁO TUẦN -->
+        <record id="rule_weekly_report_intern" model="ir.rule">
+            <field name="name">Thực tập sinh chỉ xem Báo cáo tuần của mình</field>
+            <field name="model_id" ref="model_weekly_report"/>
+            <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+        <record id="rule_weekly_report_manager" model="ir.rule">
+            <field name="name">Quản lý xem tất cả Báo cáo tuần</field>
+            <field name="model_id" ref="model_weekly_report"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('base.group_erp_manager'))]"/>
+        </record>
+
+        <!-- 3. QUY TẮC CHO LỊCH THUYẾT TRÌNH -->
+        <record id="rule_presentation_intern" model="ir.rule">
+            <field name="name">Thực tập sinh chỉ xem Lịch thuyết trình của mình</field>
+            <field name="model_id" ref="model_task_presentation"/>
+            <field name="domain_force">[('presenter_id.user_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+        <record id="rule_presentation_manager" model="ir.rule">
+            <field name="name">Quản lý xem tất cả Lịch thuyết trình</field>
+            <field name="model_id" ref="model_task_presentation"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('base.group_erp_manager'))]"/>
+        </record>
+    </data>
+</odoo>
+-e 
+
+--- FILE: ./security/security_groups.xml ---
+-e 
+
+--- FILE: ./security/ir.model.access.csv ---
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_daily_report_user,daily.report.user,model_daily_report,base.group_user,1,1,1,0
+access_daily_report_admin,daily.report.admin,model_daily_report,base.group_erp_manager,1,1,1,1
+access_weekly_report,weekly.report,model_weekly_report,base.group_user,1,1,1,0
+access_task_presentation,task.presentation,model_task_presentation,base.group_user,1,1,1,0
+access_intern_dashboard,intern.dashboard,model_intern_dashboard,base.group_user,1,1,1,0
+access_work_feedback_user,work.feedback.user,model_work_feedback,base.group_user,1,0,0,0
+access_work_feedback_admin,work.feedback.admin,model_work_feedback,base.group_erp_manager,1,1,1,1
+-e 
+
+--- FILE: ./__init__.py ---
+from . import models
+
+--------------------------------------------------
+📄 FILE: ./security/ir.model.access.csv
+--------------------------------------------------
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_daily_report_user,daily.report.user,model_daily_report,base.group_user,1,1,1,0
+access_daily_report_admin,daily.report.admin,model_daily_report,base.group_erp_manager,1,1,1,1
+access_weekly_report,weekly.report,model_weekly_report,base.group_user,1,1,1,0
+access_task_presentation,task.presentation,model_task_presentation,base.group_user,1,1,1,0
+access_intern_dashboard,intern.dashboard,model_intern_dashboard,base.group_user,1,1,1,0
+access_work_feedback_user,work.feedback.user,model_work_feedback,base.group_user,1,0,0,0
+access_work_feedback_admin,work.feedback.admin,model_work_feedback,base.group_erp_manager,1,1,1,1
+
+
+--------------------------------------------------
+📄 FILE: ./security/security_groups.xml
+--------------------------------------------------
+
+
+--------------------------------------------------
+📄 FILE: ./security/security_rules.xml
+--------------------------------------------------
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <!-- Báo Cáo Ngày -->
+        <record id="rule_daily_report_intern" model="ir.rule">
+            <field name="name">Thực tập sinh chỉ xem Báo cáo ngày của mình</field>
+            <field name="model_id" ref="model_daily_report"/>
+            <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+        <record id="rule_daily_report_manager" model="ir.rule">
+            <field name="name">Quản lý xem tất cả Báo cáo ngày</field>
+            <field name="model_id" ref="model_daily_report"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('base.group_erp_manager'))]"/>
+        </record>
+
+        <!-- Báo Cáo Tuần -->
+        <record id="rule_weekly_report_intern" model="ir.rule">
+            <field name="name">Thực tập sinh chỉ xem Báo cáo tuần của mình</field>
+            <field name="model_id" ref="model_weekly_report"/>
+            <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+        <record id="rule_weekly_report_manager" model="ir.rule">
+            <field name="name">Quản lý xem tất cả Báo cáo tuần</field>
+            <field name="model_id" ref="model_weekly_report"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('base.group_erp_manager'))]"/>
+        </record>
+
+        <!-- Lịch Thuyết Trình -->
+        <record id="rule_presentation_intern" model="ir.rule">
+            <field name="name">Thực tập sinh chỉ xem Lịch thuyết trình của mình</field>
+            <field name="model_id" ref="model_task_presentation"/>
+            <field name="domain_force">[('presenter_id.user_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+        <record id="rule_presentation_manager" model="ir.rule">
+            <field name="name">Quản lý xem tất cả Lịch thuyết trình</field>
+            <field name="model_id" ref="model_task_presentation"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('base.group_erp_manager'))]"/>
+        </record>
+
+        <!-- PROJECT TASK: Nâng cấp linh hoạt cho mô hình Dự án cá nhân -->
+        <record id="rule_project_task_intern_backend" model="ir.rule">
+            <field name="name">Thực tập sinh thấy Task được giao HOẶC Task trong Dự án cá nhân</field>
+            <field name="model_id" ref="project.model_project_task"/>
+            <field name="domain_force">['|', ('user_ids', 'in', user.id), ('project_id.intern_id.user_id', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+            <field name="perm_read" eval="1"/>
+            <field name="perm_write" eval="1"/>
+            <field name="perm_create" eval="0"/>
+            <field name="perm_unlink" eval="0"/>
+        </record>
+    </data>
+</odoo>
+
+
+--------------------------------------------------
+📄 FILE: ./views/daily_report_views.xml
+--------------------------------------------------
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_daily_report_search" model="ir.ui.view">
+        <field name="name">daily.report.search</field>
+        <field name="model">daily.report</field>
+        <field name="priority" eval="1"/>
+        <field name="arch" type="xml">
+            <search string="Tìm kiếm Báo Cáo">
+                <field name="name" string="Tiêu đề / Kế hoạch" filter_domain="['|', ('name', 'ilike', self), ('next_day_plan', 'ilike', self)]"/>
+                <field name="employee_id" string="Tên Thực tập sinh"/>
+                <field name="report_date" string="Ngày báo cáo"/>
+                <separator/>
+                <filter string="🚨 Cần hỗ trợ gấp" name="need_support" domain="[('need_support', '=', True)]"/>
+                <filter string="📝 Đang Nháp" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="📤 Đã Nộp" name="submitted" domain="[('state', '=', 'submitted')]"/>
+                <filter string="✅ Đã Review" name="reviewed" domain="[('state', '=', 'reviewed')]"/>
+                <separator/>
+                <filter string="🗑️ Báo Cáo Đã Lưu Trữ" name="archived" domain="[('active', '=', False)]"/>
+                <group expand="0" string="Gom nhóm theo...">
+                    <filter string="Người báo cáo" name="group_by_employee" context="{'group_by': 'employee_id'}"/>
+                    <filter string="Trạng thái" name="group_by_state" context="{'group_by': 'state'}"/>
+                    <filter string="Ngày báo cáo" name="group_by_date" context="{'group_by': 'report_date:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_daily_report_tree" model="ir.ui.view">
+        <field name="name">daily.report.tree</field>
+        <field name="model">daily.report</field>
+        <field name="arch" type="xml">
+            <tree string="Daily Reports">
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="report_date"/>
+                <field name="need_support" widget="boolean_toggle" readonly="1"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state == 'reviewed'"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_daily_report_form" model="ir.ui.view">
+        <field name="name">daily.report.form</field>
+        <field name="model">daily.report</field>
+        <field name="arch" type="xml">
+            <form string="Daily Report">
+                <header>
+                    <button name="action_open_full_screen" string="🖥️ Mở Toàn Màn Hình" type="object" class="btn-info" invisible="not context.get('show_fullscreen_btn')"/>
+                    <button name="action_submit" string="Nộp Báo Cáo" type="object" class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_request_revision" string="🔄 Yêu cầu sửa lại" type="object" class="btn-secondary" invisible="state != 'submitted'" groups="base.group_erp_manager"/>
+                    <button name="action_unlock_admin" string="🔓 Mở Khóa" type="object" class="btn-secondary" invisible="state != 'reviewed'" groups="base.group_erp_manager"/>
+                    <button name="action_resolve_support" string="Đã xử lý hỗ trợ" type="object" class="oe_highlight btn-warning" invisible="not need_support" groups="base.group_erp_manager"/>
+                    <button name="action_review" string="Lưu &amp; Chốt Điểm" type="object" class="oe_highlight" invisible="state != 'submitted'" groups="base.group_erp_manager"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submitted,reviewed"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="Đã Lưu Trữ" bg_color="bg-danger" invisible="active"/>
+                    <field name="active" invisible="1"/>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="state != 'draft'"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="employee_id" readonly="state != 'draft'"/>
+                            <field name="project_id" readonly="1" force_save="1" string="Dự án cá nhân"/>
+                            <field name="report_date" readonly="state != 'draft'"/>
+                        </group>
+                        <group>
+                            <field name="need_support" widget="boolean_toggle" readonly="state != 'draft'"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Công Việc">
+                            <group>
+                                <field name="work_summary" placeholder="Mô tả tóm tắt công việc (VD: Đọc tài liệu, cài đặt môi trường...)" readonly="state != 'draft'"/>
+                                
+                                <!-- BỘ LỌC AN TOÀN CHO FRONTEND -->
+                                <field name="completed_task_ids" widget="many2many_tags" readonly="state != 'draft'" domain="[('project_id', '=', project_id), ('child_ids', '=', False)]"/>
+                                <field name="in_progress_task_ids" widget="many2many_tags" readonly="state != 'draft'" domain="[('project_id', '=', project_id), ('child_ids', '=', False)]"/>
+                                <field name="attachment_ids" widget="many2many_binary" readonly="state != 'draft'"/>
+                            </group>
+                        </page>
+                        <page string="Vấn Đề &amp; Giải Pháp">
+                            <group>
+                                <field name="problem_description" readonly="state != 'draft'"/>
+                                <field name="solution_description" readonly="state != 'draft'"/>
+                                <field name="next_day_plan" readonly="state != 'draft'"/>
+                            </group>
+                        </page>
+                        <page string="Đánh Giá Của Admin" invisible="state == 'draft'">
+                            <group>
+                                <field name="support_response" placeholder="Admin nhập hướng dẫn xử lý vấn đề..." readonly="state == 'reviewed'"/>
+                                <field name="manager_score" widget="priority" readonly="state == 'reviewed'"/>
+                                <field name="manager_feedback" placeholder="Admin nhập nhận xét đánh giá..." readonly="state == 'reviewed'"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="activity_ids" widget="mail_activity"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_daily_report" model="ir.actions.act_window">
+        <field name="name">Báo Cáo Ngày</field>
+        <field name="res_model">daily.report</field>
+        <field name="view_mode">tree,form,graph,pivot</field>
+        <field name="search_view_id" ref="view_daily_report_search"/>
+    </record>
+</odoo>
+
+
+--------------------------------------------------
+📄 FILE: ./views/dashboard_views.xml
+--------------------------------------------------
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_intern_dashboard_form" model="ir.ui.view">
+        <field name="name">intern.dashboard.form</field>
+        <field name="model">intern.dashboard</field>
+        <field name="arch" type="xml">
+            <form create="false" delete="false">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_reports" type="object" class="oe_stat_button" icon="fa-file-text-o">
+                            <field name="total_reports" widget="statinfo" string="Tổng Báo Cáo"/>
+                        </button>
+                        <button name="action_open_progress_tasks" type="object" class="oe_stat_button" icon="fa-spinner">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value text-warning"><field name="total_tasks_progress"/></span>
+                                <span class="o_stat_text">Task Đang Làm</span>
+                            </div>
+                        </button>
+                        <button name="action_open_done_tasks" type="object" class="oe_stat_button" icon="fa-check-circle">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value text-success"><field name="total_tasks_done"/></span>
+                                <span class="o_stat_text">Task Đã Xong</span>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <div class="oe_title mt-4 mb-4">
+                        <h1>BẢNG ĐIỀU KHIỂN TỔNG QUAN</h1>
+                    </div>
+
+                    <notebook>
+                        <page string="🚨 CẦN HỖ TRỢ GẤP">
+                            <!-- TRUYỀN NGỮ CẢNH YÊU CẦU HIỆN NÚT VÀO ĐÂY -->
+                            <field name="urgent_report_ids" readonly="1" context="{'show_fullscreen_btn': True}">
+                                <tree>
+                                    <field name="name"/>
+                                    <field name="employee_id"/>
+                                    <field name="report_date"/>
+                                    <field name="problem_description" string="Mô tả vấn đề"/>
+                                    <button name="action_open_form_view" string="Mở Xem" type="object" class="btn-sm btn-primary"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="📊 DANH SÁCH BÁO CÁO">
+                            <group col="4">
+                                <field name="filter_type"/>
+                                <field name="filter_date"/>
+                            </group>
+                            <!-- TRUYỀN NGỮ CẢNH YÊU CẦU HIỆN NÚT VÀO ĐÂY -->
+                            <field name="filtered_report_ids" readonly="1" context="{'show_fullscreen_btn': True}">
+                                <tree>
+                                    <field name="name"/>
+                                    <field name="employee_id"/>
+                                    <field name="report_date"/>
+                                    <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state == 'reviewed'"/>
+                                    <button name="action_open_form_view" string="Mở Xem" type="object" class="btn-sm btn-secondary"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_intern_dashboard" model="ir.actions.server">
+        <field name="name">Tổng Quan KPI</field>
+        <field name="model_id" ref="model_intern_dashboard"/>
+        <field name="state">code</field>
+        <field name="code">
+record = env['intern.dashboard'].search([], limit=1)
+if not record:
+    record = env['intern.dashboard'].create({'name': 'Dashboard'})
+action = {
+    'type': 'ir.actions.act_window',
+    'name': 'Tổng Quan',
+    'res_model': 'intern.dashboard',
+    'res_id': record.id,
+    'view_mode': 'form',
+    'target': 'current',
+}
+        </field>
+    </record>
+</odoo>
+
+
+--------------------------------------------------
+📄 FILE: ./views/menu_views.xml
+--------------------------------------------------
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_intern_work_root" name="Intern Work" sequence="10" web_icon="project,static/description/icon.png"/>
+    
+    <menuitem id="menu_intern_dashboard" name="Tổng Quan (KPI)" parent="menu_intern_work_root" action="action_intern_dashboard" sequence="5"/>
+    
+    <menuitem id="menu_intern_reports" name="Báo Cáo" parent="menu_intern_work_root" sequence="10"/>
+    <menuitem id="menu_daily_report" name="Báo Cáo Ngày" parent="menu_intern_reports" action="action_daily_report" sequence="10"/>
+    <menuitem id="menu_weekly_report" name="Báo Cáo Tuần" parent="menu_intern_reports" action="action_weekly_report" sequence="20"/>
+
+    <menuitem id="menu_intern_reviews" name="Thuyết Trình" parent="menu_intern_work_root" sequence="20"/>
+    <menuitem id="menu_task_presentation" name="Lịch Thuyết Trình" parent="menu_intern_reviews" action="action_task_presentation" sequence="10"/>
+</odoo>
+
+
+--------------------------------------------------
+📄 FILE: ./views/project_views.xml
+--------------------------------------------------
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Nút chia việc tự động -->
+    <record id="view_task_form_inherited_split" model="ir.ui.view">
+        <field name="name">project.task.form.inherited.split</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_split_subtasks" string="⚡ Tách Sub-task Tự Động" type="object" class="oe_highlight btn-warning" groups="base.group_erp_manager" invisible="not user_ids"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Form Dự Án: Thêm Smart Button và field chọn TTS -->
+    <record id="view_project_form_intern_inherit" model="ir.ui.view">
+        <field name="name">project.form.intern.inherit</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.edit_project"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_open_intern_reports" type="object" class="oe_stat_button" icon="fa-file-text-o" invisible="not intern_id">
+                    <div class="o_stat_info">
+                        <span class="o_stat_value"><field name="report_count"/></span>
+                        <span class="o_stat_text">Báo cáo</span>
+                    </div>
+                </button>
+            </xpath>
+            <xpath expr="//group" position="inside">
+                <group string="Quản lý Thực Tập Sinh">
+                    <field name="intern_id" placeholder="Gán Thực tập sinh sở hữu dự án này..."/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Kanban Dự Án: Thêm huy hiệu cảnh báo và Ngày báo cáo -->
+    <record id="view_project_kanban_intern_inherit" model="ir.ui.view">
+        <field name="name">project.kanban.intern.inherit</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.view_project_kanban"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('o_kanban_record_bottom')]" position="before">
+                <div t-if="record.intern_id.raw_value" class="mt-2 mb-2 p-2" style="background-color: #f8f9fa; border-radius: 5px; border-left: 3px solid #714B67;">
+                    <strong>👨‍🎓 <field name="intern_id"/></strong><br/>
+                    <t t-if="record.pending_report_count.raw_value > 0">
+                        <span class="badge text-bg-danger mt-1">
+                            <i class="fa fa-bell"/> <field name="pending_report_count"/> Báo cáo chờ duyệt!
+                        </span>
+                    </t>
+                    <t t-if="record.last_report_date.raw_value">
+                        <div class="text-muted small mt-1">
+                            <i class="fa fa-clock-o"/> Cập nhật: <field name="last_report_date"/>
+                        </div>
+                    </t>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+
+
+--------------------------------------------------
+📄 FILE: ./views/task_presentation_views.xml
+--------------------------------------------------
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_task_presentation_tree" model="ir.ui.view">
+        <field name="name">task.presentation.tree</field>
+        <field name="model">task.presentation</field>
+        <field name="arch" type="xml">
+            <tree string="Lịch Thuyết Trình">
+                <field name="name"/>
+                <field name="presenter_id"/>
+                <field name="presentation_date"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-warning="state == 'scheduled'" decoration-success="state == 'completed'"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_task_presentation_form" model="ir.ui.view">
+        <field name="name">task.presentation.form</field>
+        <field name="model">task.presentation</field>
+        <field name="arch" type="xml">
+            <form string="Lịch Thuyết Trình">
+                <header>
+                    <button name="action_schedule" string="Lên Lịch" type="object" class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_complete" string="Đã Hoàn Thành" type="object" class="oe_highlight" invisible="state != 'scheduled'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,scheduled,completed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="Ví dụ: Demo sản phẩm App..."/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="presenter_id"/>
+                            <field name="presentation_date"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Nội Dung Báo Cáo">
+                            <group>
+                                <field name="task_ids" widget="many2many_tags"/>
+                                <field name="reviewer_ids" widget="many2many_tags"/>
+                            </group>
+                        </page>
+                        <!-- GIAO DIỆN ĐÁNH GIÁ TRỰC TIẾP TẠI ĐÂY -->
+                        <page string="Đánh Giá Của Admin" invisible="state == 'draft'">
+                            <field name="feedback_ids" context="{'default_employee_id': presenter_id}">
+                                <tree editable="bottom">
+                                    <field name="reviewer_id" string="Người chấm"/>
+                                    <field name="score_technical" widget="priority" string="Kỹ thuật"/>
+                                    <field name="score_communication" widget="priority" string="Trình bày"/>
+                                    <field name="comments" string="Nhận xét chi tiết"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_task_presentation" model="ir.actions.act_window">
+        <field name="name">Lịch Thuyết Trình</field>
+        <field name="res_model">task.presentation</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>
+
+
+--------------------------------------------------
+📄 FILE: ./views/weekly_report_views.xml
+--------------------------------------------------
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_weekly_report_tree" model="ir.ui.view">
+        <field name="name">weekly.report.tree</field>
+        <field name="model">weekly.report</field>
+        <field name="arch" type="xml">
+            <tree string="Weekly Reports">
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="start_date"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state == 'reviewed'"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_weekly_report_form" model="ir.ui.view">
+        <field name="name">weekly.report.form</field>
+        <field name="model">weekly.report</field>
+        <field name="arch" type="xml">
+            <form string="Weekly Report">
+                <header>
+                    <button name="action_submit" string="Nộp Báo Cáo" type="object" class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_review" string="Lưu &amp; Chốt Điểm" type="object" class="oe_highlight" invisible="state != 'submitted'" groups="base.group_erp_manager"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submitted,reviewed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="state != 'draft'"/></h1>
+                    </div>
+                    <group>
+                        <group><field name="employee_id" readonly="state != 'draft'"/></group>
+                        <group>
+                            <field name="start_date" readonly="state != 'draft'"/>
+                            <field name="end_date" readonly="state != 'draft'"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Tổng Hợp Công Việc">
+                            <group>
+                                <field name="completed_task_ids" widget="many2many_tags" readonly="state != 'draft'"/>
+                                <field name="in_progress_task_ids" widget="many2many_tags" readonly="state != 'draft'"/>
+                            </group>
+                        </page>
+                        <page string="Vấn Đề &amp; Kế Hoạch">
+                            <group>
+                                <field name="issues_summary" readonly="state != 'draft'"/>
+                                <field name="next_week_plan" readonly="state != 'draft'"/>
+                            </group>
+                        </page>
+                        <page string="Đánh Giá Của Admin" invisible="state == 'draft'">
+                            <group>
+                                <field name="manager_score" widget="priority" readonly="state == 'reviewed'"/>
+                                <field name="manager_feedback" placeholder="Admin nhập nhận xét tại đây..." readonly="state == 'reviewed'"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_weekly_report" model="ir.actions.act_window">
+        <field name="name">Báo Cáo Tuần</field>
+        <field name="res_model">weekly.report</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>
+
+
+--------------------------------------------------
+📄 FILE: ./views/work_feedback_views.xml
+--------------------------------------------------
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_work_feedback_tree" model="ir.ui.view">
+        <field name="name">work.feedback.tree</field>
+        <field name="model">work.feedback</field>
+        <field name="arch" type="xml">
+            <tree string="Feedback">
+                <field name="presentation_id"/>
+                <field name="employee_id"/>
+                <field name="reviewer_id"/>
+                <field name="overall_score" widget="progressbar"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_work_feedback_form" model="ir.ui.view">
+        <field name="name">work.feedback.form</field>
+        <field name="model">work.feedback</field>
+        <field name="arch" type="xml">
+            <form string="Feedback">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="presentation_id"/>
+                            <field name="employee_id"/>
+                            <field name="reviewer_id"/>
+                        </group>
+                        <group>
+                            <field name="overall_score" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Tiêu Chí Đánh Giá (1-5 Sao)">
+                        <group>
+                            <field name="score_technical" widget="priority"/>
+                            <field name="score_understanding" widget="priority"/>
+                        </group>
+                        <group>
+                            <field name="score_problem_solving" widget="priority"/>
+                            <field name="score_communication" widget="priority"/>
+                        </group>
+                    </group>
+                    <group string="Nhận Xét">
+                        <field name="comments" nolabel="1" placeholder="Nhập nhận xét chi tiết..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_work_feedback" model="ir.actions.act_window">
+        <field name="name">Phản Hồi &amp; Đánh Giá</field>
+        <field name="res_model">work.feedback</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

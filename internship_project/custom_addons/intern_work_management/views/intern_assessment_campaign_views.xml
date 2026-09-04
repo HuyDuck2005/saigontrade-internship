@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Intern Assessment Campaign -->
+    <record id="view_intern_assessment_campaign_form" model="ir.ui.view">
+        <field name="name">intern.assessment.campaign.form</field>
+        <field name="model">intern.assessment.campaign</field>
+        <field name="arch" type="xml">
+            <form string="Chiến dịch Đánh giá">
+                <header>
+                    <button name="action_import_and_assign_tasks" string="Import &amp; Giao Task" type="object" class="oe_highlight" invisible="status != 'draft'"/>
+                    <button name="action_start_campaign" string="Bắt đầu" type="object" class="btn-success" invisible="status != 'assigned'"/>
+                    <button name="action_complete_campaign" string="Hoàn thành" type="object" class="btn-primary" invisible="status != 'in_progress'"/>
+                    <field name="status" widget="statusbar" statusbar_visible="draft,assigned,in_progress,completed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="Tên chiến dịch (VD: Q3 2024 Talent Assessment)" readonly="status != 'draft'"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="department_id" readonly="status != 'draft'"/>
+                            <field name="evaluation_rubric_id" readonly="status != 'draft'"/>
+                        </group>
+                        <group>
+                            <field name="start_date" readonly="status != 'draft'"/>
+                            <field name="end_date" readonly="status != 'draft'"/>
+                            <field name="task_template_file" filename="task_template_filename" readonly="status != 'draft'"/>
+                            <field name="task_template_filename" invisible="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Thực Tập Sinh tham gia">
+                            <field name="intern_ids" widget="many2many_tags" readonly="status != 'draft'"/>
+                        </page>
+                        <page string="Danh sách Task đã tạo">
+                            <field name="task_ids" readonly="1">
+                                <tree>
+                                    <field name="name"/>
+                                    <field name="project_id"/>
+                                    <field name="user_ids" widget="many2many_tags"/>
+                                    <field name="stage_id"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_intern_assessment_campaign_tree" model="ir.ui.view">
+        <field name="name">intern.assessment.campaign.tree</field>
+        <field name="model">intern.assessment.campaign</field>
+        <field name="arch" type="xml">
+            <tree string="Chiến dịch Đánh giá">
+                <field name="name"/>
+                <field name="department_id"/>
+                <field name="start_date"/>
+                <field name="end_date"/>
+                <field name="status" widget="badge"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Pivot Dashboard -->
+    <record id="view_intern_assessment_dashboard_pivot" model="ir.ui.view">
+        <field name="name">intern.assessment.dashboard.pivot</field>
+        <field name="model">project.task</field>
+        <field name="arch" type="xml">
+            <pivot string="Dashboard Phân tích Năng lực" display_quantity="1">
+                <field name="campaign_id" type="row"/>
+                <field name="user_ids" type="row"/>
+                <field name="stage_id" type="col"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_intern_assessment_dashboard_graph" model="ir.ui.view">
+        <field name="name">intern.assessment.dashboard.graph</field>
+        <field name="model">project.task</field>
+        <field name="arch" type="xml">
+            <graph string="Tiến độ Campaign" type="bar">
+                <field name="user_ids"/>
+                <field name="stage_id"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="action_intern_assessment_campaign" model="ir.actions.act_window">
+        <field name="name">Chiến dịch Đánh giá</field>
+        <field name="res_model">intern.assessment.campaign</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="action_intern_assessment_dashboard" model="ir.actions.act_window">
+        <field name="name">Dashboard Đánh Giá</field>
+        <field name="res_model">project.task</field>
+        <field name="view_mode">pivot,graph,tree</field>
+        <field name="domain">[('campaign_id', '!=', False)]</field>
+    </record>
+</odoo>

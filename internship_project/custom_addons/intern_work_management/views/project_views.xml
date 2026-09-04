@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Nút chia việc tự động -->
+    <record id="view_task_form_inherited_split" model="ir.ui.view">
+        <field name="name">project.task.form.inherited.split</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_split_subtasks" string="⚡ Tách Sub-task Tự Động" type="object" class="oe_highlight btn-warning" groups="base.group_erp_manager" invisible="not user_ids"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Form Dự Án: Thêm Smart Button và field chọn TTS -->
+    <record id="view_project_form_intern_inherit" model="ir.ui.view">
+        <field name="name">project.form.intern.inherit</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.edit_project"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_open_intern_reports" type="object" class="oe_stat_button" icon="fa-file-text-o" invisible="not intern_id">
+                    <div class="o_stat_info">
+                        <span class="o_stat_value"><field name="report_count"/></span>
+                        <span class="o_stat_text">Báo cáo</span>
+                    </div>
+                </button>
+            </xpath>
+            <xpath expr="//group" position="inside">
+                <group string="Quản lý Thực Tập Sinh">
+                    <field name="intern_id" placeholder="Gán Thực tập sinh sở hữu dự án này..."/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Kanban Dự Án: Thêm huy hiệu cảnh báo và Ngày báo cáo -->
+    <record id="view_project_kanban_intern_inherit" model="ir.ui.view">
+        <field name="name">project.kanban.intern.inherit</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.view_project_kanban"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('o_kanban_record_bottom')]" position="before">
+                <div t-if="record.intern_id.raw_value" class="mt-2 mb-2 p-2" style="background-color: #f8f9fa; border-radius: 5px; border-left: 3px solid #714B67;">
+                    <strong>👨‍🎓 <field name="intern_id"/></strong><br/>
+                    <t t-if="record.pending_report_count.raw_value > 0">
+                        <span class="badge text-bg-danger mt-1">
+                            <i class="fa fa-bell"/> <field name="pending_report_count"/> Báo cáo chờ duyệt!
+                        </span>
+                    </t>
+                    <t t-if="record.last_report_date.raw_value">
+                        <div class="text-muted small mt-1">
+                            <i class="fa fa-clock-o"/> Cập nhật: <field name="last_report_date"/>
+                        </div>
+                    </t>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

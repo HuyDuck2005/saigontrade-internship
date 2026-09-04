@@ -8,8 +8,11 @@ class DailyReport(models.Model):
 
     name = fields.Char(string='Tiêu đề', required=True, copy=False, default='Draft', tracking=True)
     employee_id = fields.Many2one('hr.employee', string='Người báo cáo', required=True, default=lambda self: self.env.user.employee_id, tracking=True)
+    project_id = fields.Many2one("project.project", string="Dự án cá nhân", compute="_compute_project_id", store=True)
     report_date = fields.Date(string='Ngày báo cáo', required=True, default=fields.Date.context_today, tracking=True)
     need_support = fields.Boolean(string='Cần hỗ trợ gấp', tracking=True)
+    
+    work_summary = fields.Text(string='Mô tả công việc đã làm', tracking=True)
     
     completed_task_ids = fields.Many2many('project.task', 'daily_completed_task_rel', string='Task đã hoàn thành')
     in_progress_task_ids = fields.Many2many('project.task', 'daily_progress_task_rel', string='Task đang thực hiện')
@@ -35,6 +38,20 @@ class DailyReport(models.Model):
     def action_submit(self):
         for record in self:
             record.state = 'submitted'
+            if record.completed_task_ids:
+                for task in record.completed_task_ids:
+                    done_stage = self.env['project.task.type'].sudo().search([
+                        ('project_ids', 'in', task.project_id.id),
+                        '|', ('name', 'ilike', 'Done'), ('name', 'ilike', 'Đã xong')
+                    ], limit=1)
+                    if not done_stage and task.project_id:
+                        done_stage = self.env['project.task.type'].sudo().create({
+                            'name': 'Đã xong (Done)',
+                            'project_ids': [(4, task.project_id.id)],
+                            'sequence': 99
+                        })
+                    if done_stage:
+                        task.sudo().stage_id = done_stage.id
 
     def action_review(self):
         for record in self:
@@ -90,34 +107,34 @@ class DailyReport(models.Model):
             'target': 'main',
         }
 
-    # ========================================================
-    # HÀM MỚI: ROBOT TỰ ĐỘNG NHẮC NHỞ (CRON JOB)
-    # ========================================================
+    @api.depends("employee_id")
+    def _compute_project_id(self):
+        for record in self:
+            if record.employee_id:
+                project = self.env["project.project"].sudo().search([("intern_id", "=", record.employee_id.id)], limit=1)
+                record.project_id = project.id if project else False
+            else:
+                record.project_id = False
+
     @api.model
     def cron_remind_daily_report(self):
         today = fields.Date.context_today(self)
         admin_group = self.env.ref('base.group_erp_manager')
-        
-        # Lấy danh sách tất cả nhân viên có tài khoản đăng nhập
         employees = self.env['hr.employee'].search([('user_id', '!=', False)])
         
         for emp in employees:
-            # Bỏ qua Admin (Admin không cần nộp báo cáo)
             if admin_group in emp.user_id.groups_id:
                 continue
-                
-            # Tìm xem hôm nay nhân viên này có báo cáo nào 'Đã nộp' hoặc 'Đã Review' chưa?
             report = self.search([
                 ('employee_id', '=', emp.id), 
                 ('report_date', '=', today), 
                 ('state', 'in', ['submitted', 'reviewed'])
             ], limit=1)
             
-            # Nếu KHÔNG tìm thấy báo cáo đã nộp -> Nhắn tin nhắc nhở!
             if not report:
                 emp.user_id.partner_id.message_post(
                     body="⏰ <b>TÍT TÍT! NHẮC NHỞ TỰ ĐỘNG:</b><br/>Đã 17h00 rồi! Đừng quên nộp Báo cáo ngày hôm nay trên hệ thống nhé bạn ơi!",
                     message_type='comment',
                     subtype_xmlid='mail.mt_comment',
-                    author_id=self.env.ref('base.partner_root').id  # Tin nhắn gửi từ System/OdooBot
+                    author_id=self.env.ref('base.partner_root').id
                 )
