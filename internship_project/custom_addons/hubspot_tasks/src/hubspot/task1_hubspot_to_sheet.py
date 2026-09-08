@@ -1,11 +1,12 @@
 import os
 import logging
+import traceback
 from datetime import datetime, timezone, timedelta
 import requests
 import gspread
 from google.oauth2.service_account import Credentials
 from dotenv import load_dotenv
-from audit_logger import log_change, get_now_vn_str
+from common.audit_logger import log_change, get_now_vn_str
 
 load_dotenv()
 
@@ -24,16 +25,22 @@ HEADERS_ORDER = [
     "Lifecycle Stage", "Create Date", "Last Modified Date", "last_sync"
 ]
 
-FIELD_NAMES = [
-    "HubSpot Contact ID", "First Name", "Last Name", "Email", "Phone",
-    "Mobile Phone", "Company", "Job Title", "Website", "Country",
-    "Lifecycle Stage", "Create Date", "Last Modified Date"
-]
+FIELD_NAMES = HEADERS_ORDER[:-1]
 
 def get_google_sheet_client():
     scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
     creds = Credentials.from_service_account_file(CREDENTIALS_FILE, scopes=scopes)
     return gspread.authorize(creds)
+
+def log_error_to_sheet(sheet, error_msg):
+    """Ghi log lỗi vào tab Sync_Errors theo đúng yêu cầu"""
+    try:
+        ws_err = sheet.worksheet("Sync_Errors")
+    except gspread.WorksheetNotFound:
+        ws_err = sheet.add_worksheet(title="Sync_Errors", rows=100, cols=5)
+        ws_err.append_row(["Timestamp (VN)", "Task", "Error Message", "Status"])
+    
+    ws_err.append_row([get_now_vn_str(), "Task 1: HubSpot -> Sheet", str(error_msg), "ERROR"])
 
 def fetch_all_hubspot_contacts():
     url = "https://api.hubapi.com/crm/v3/objects/contacts"
@@ -52,46 +59,44 @@ def fetch_all_hubspot_contacts():
             params["after"] = after
         res = requests.get(url, headers=headers, params=params)
         if res.status_code != 200:
-            logger.error(f"Lỗi gọi HubSpot: {res.status_code} - {res.text}")
-            break
+            raise Exception(f"Lỗi gọi HubSpot: {res.status_code} - {res.text}")
         data = res.json()
         contacts.extend(data.get("results", []))
         after = data.get("paging", {}).get("next", {}).get("after")
         if not after:
             break
-            
     return contacts
 
 def sync_contacts():
     now_vn_str = get_now_vn_str()
-    logger.info("🔄 Bắt đầu kiểm tra và đối soát Contact từ HubSpot...")
-
-    raw_contacts = fetch_all_hubspot_contacts()
-    total_hubspot = len(raw_contacts)
+    # Yêu cầu: Tên sheet theo format Contacts_YYYY_MM_DD
+    today_str = datetime.now(VN_TZ).strftime("%Y_%m_%d")
+    dynamic_sheet_name = f"Contacts_{today_str}"
+    
+    logger.info(f"🔄 Bắt đầu đối soát Contact. Dữ liệu sẽ lưu vào tab: {dynamic_sheet_name}")
 
     client = get_google_sheet_client()
     sheet = client.open_by_key(SPREADSHEET_ID) if SPREADSHEET_ID else client.open(SPREADSHEET_NAME)
 
     try:
-        ws = sheet.worksheet("Contacts")
+        raw_contacts = fetch_all_hubspot_contacts()
+    except Exception as e:
+        logger.error(f"Failed to fetch contacts: {e}")
+        log_error_to_sheet(sheet, str(e))
+        return
+
+    try:
+        ws = sheet.worksheet(dynamic_sheet_name)
     except gspread.WorksheetNotFound:
-        ws = sheet.add_worksheet(title="Contacts", rows=100, cols=20)
+        ws = sheet.add_worksheet(title=dynamic_sheet_name, rows=100, cols=20)
         ws.append_row(HEADERS_ORDER)
 
     existing_rows = ws.get_all_values()
-    old_data_map = {}
-    if len(existing_rows) > 1:
-        for r in existing_rows[1:]:
-            if r and r[0]:
-                cid = str(r[0]).strip()
-                # Lưu trữ toàn bộ các cột cũ để so sánh
-                old_data_map[cid] = r
+    old_data_map = {str(r[0]).strip(): r for r in existing_rows[1:] if r and r[0]}
 
     current_hubspot_ids = set()
     rows_to_write = [HEADERS_ORDER]
-    
-    created_count = 0
-    updated_count = 0
+    created_count, updated_count = 0, 0
 
     for item in raw_contacts:
         cid = str(item.get("id"))
@@ -99,76 +104,34 @@ def sync_contacts():
         p = item.get("properties", {})
         
         new_row_values = [
-            cid,
-            p.get("firstname") or "",
-            p.get("lastname") or "",
-            p.get("email") or "",
-            p.get("phone") or "",
-            p.get("mobilephone") or "",
-            p.get("company") or "",
-            p.get("jobtitle") or "",
-            p.get("website") or "",
-            p.get("country") or "",
-            p.get("lifecyclestage") or "",
-            p.get("createdate") or "",
-            p.get("lastmodifieddate") or ""
+            cid, p.get("firstname") or "", p.get("lastname") or "", p.get("email") or "",
+            p.get("phone") or "", p.get("mobilephone") or "", p.get("company") or "",
+            p.get("jobtitle") or "", p.get("website") or "", p.get("country") or "",
+            p.get("lifecyclestage") or "", p.get("createdate") or "", p.get("lastmodifieddate") or ""
         ]
 
         if cid not in old_data_map:
-            # CREATE mới
             created_count += 1
-            log_change(
-                action="CREATE",
-                entity_type="Contact",
-                entity_id=cid,
-                source="HubSpot CRM",
-                actor=p.get("email") or "HubSpot User",
-                changes=[{"field": "Full Info", "old": "None", "new": f"{p.get('firstname', '')} {p.get('lastname', '')} ({p.get('email', '')})"}]
-            )
+            log_change("CREATE", "Contact", cid, "HubSpot", p.get("email") or "HubSpot User", [{"field": "Info", "old": "", "new": f"{p.get('firstname')} {p.get('lastname')}"}])
         else:
-            # So sánh từng trường để tìm khác biệt
             old_row = old_data_map[cid]
-            field_diffs = []
-            for i, f_name in enumerate(FIELD_NAMES):
-                old_val = old_row[i] if i < len(old_row) else ""
-                new_val = new_row_values[i]
-                if str(old_val).strip() != str(new_val).strip():
-                    field_diffs.append({"field": f_name, "old": old_val, "new": new_val})
-            
+            field_diffs = [{"field": f_name, "old": old_row[i] if i < len(old_row) else "", "new": new_val} 
+                           for i, (f_name, new_val) in enumerate(zip(FIELD_NAMES, new_row_values)) 
+                           if str(old_row[i] if i < len(old_row) else "").strip() != str(new_val).strip()]
             if field_diffs:
                 updated_count += 1
-                log_change(
-                    action="UPDATE",
-                    entity_type="Contact",
-                    entity_id=cid,
-                    source="HubSpot CRM",
-                    actor=p.get("email") or "HubSpot User",
-                    changes=field_diffs
-                )
+                log_change("UPDATE", "Contact", cid, "HubSpot", p.get("email") or "HubSpot User", field_diffs)
 
         rows_to_write.append(new_row_values + [now_vn_str])
 
-    # Kiểm tra liên hệ bị xóa khỏi HubSpot
-    old_ids = set(old_data_map.keys())
-    deleted_ids = old_ids - current_hubspot_ids
+    deleted_ids = set(old_data_map.keys()) - current_hubspot_ids
     for d_id in deleted_ids:
-        log_change(
-            action="DELETE",
-            entity_type="Contact",
-            entity_id=d_id,
-            source="HubSpot CRM",
-            actor="HubSpot Admin",
-            changes=[{"field": "Status", "old": "Active", "new": "Deleted/Trash"}]
-        )
+        log_change("DELETE", "Contact", d_id, "HubSpot", "Admin", [{"field": "Status", "old": "Active", "new": "Deleted"}])
 
-    # Ghi đè cập nhật Sheet
     ws.clear()
     ws.update(values=rows_to_write, range_name="A1")
 
-    logger.info("==================== TỔNG KẾT ĐỐI SOÁT TASK 1 ====================")
-    logger.info(f"Tổng CRM: {total_hubspot} | Thêm mới: {created_count} | Thay đổi: {updated_count} | Đã xóa: {len(deleted_ids)}")
-    logger.info(f"Đã ghi log chi tiết vào 'audit_change_log.csv', 'audit_change_log.json' và tab 'Audit_Logs'")
-    logger.info("=================================================================")
+    logger.info(f"✅ TỔNG KẾT: CRM {len(raw_contacts)} | Mới {created_count} | Sửa {updated_count} | Xóa {len(deleted_ids)}")
 
 if __name__ == "__main__":
     sync_contacts()

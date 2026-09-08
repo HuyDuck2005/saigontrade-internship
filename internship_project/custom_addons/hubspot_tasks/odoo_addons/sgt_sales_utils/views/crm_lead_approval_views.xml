@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_crm_lead_approval_form" model="ir.ui.view">
+        <field name="name">crm.lead.approval.form</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_confirm_deal" string="Confirm Deal" type="object" class="oe_highlight" invisible="approval_state in ['pending', 'approved']"/>
+                <button name="action_approve_deal" string="Approve" type="object" class="btn-success" invisible="approval_state != 'pending'" groups="sales_team.group_sale_manager"/>
+                <button name="action_reject_deal" string="Reject" type="object" class="btn-danger" invisible="approval_state != 'pending'" groups="sales_team.group_sale_manager"/>
+                <field name="approval_state" widget="statusbar" statusbar_visible="draft,pending,approved,rejected"/>
+            </xpath>
+            <xpath expr="//group[@name='opportunity_partner']" position="after">
+                <group string="Approval Settings">
+                    <field name="discount_percentage"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

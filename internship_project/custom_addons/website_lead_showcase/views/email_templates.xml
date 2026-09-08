@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    
+    <record id="email_lead_approval_request" model="mail.template">
+        <field name="name">Lead Approval Request</field>
+        <field name="email_from">{{ (object.company_id.email or object.env.user.company_id.email) }}</field>
+        <field name="subject">New Lead Needs Approval: {{ object.name }}</field>
+        <field name="model_id" ref="crm.model_crm_lead"/>
+        <field name="body_html" type="html">
+            <div style="font-family: Arial; font-size: 12px;">
+                <p>Hello,</p>
+                
+                <p>A new lead has been submitted and requires your review:</p>
+                
+                <table style="border: 1px solid #ccc; padding: 10px;">
+                    <tr><td><strong>Lead Name:</strong></td><td><t t-out="object.name"/></td></tr>
+                    <tr><td><strong>Category:</strong></td><td><t t-out="object.lead_category.name or 'N/A'"/></td></tr>
+                    <tr><td><strong>Country:</strong></td><td><t t-out="object.country_region or 'N/A'"/></td></tr>
+                    <tr><td><strong>Description:</strong></td><td><t t-out="object.short_description or 'N/A'"/></td></tr>
+                    <tr><td><strong>Submitted by:</strong></td><td><t t-out="object.create_uid.name"/></td></tr>
+                    <tr><td><strong>Date:</strong></td><td><t t-out="object.create_date.strftime('%d/%m/%Y %H:%M')"/></td></tr>
+                </table>
+                
+                <p>
+                    <a t-attf-href="/web#id={{ object.id }}&amp;model=crm.lead&amp;view_type=form" style="background-color: #007bff; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px;">
+                        Review Lead
+                    </a>
+                </p>
+                
+                <p>Thank you,<br/>CRM System</p>
+            </div>
+        </field>
+    </record>
+    
+    <record id="email_lead_approved" model="mail.template">
+        <field name="name">Lead Approved</field>
+        <field name="email_from">{{ (object.company_id.email or object.env.user.company_id.email) }}</field>
+        <field name="subject">Your Lead Has Been Approved: {{ object.name }}</field>
+        <field name="model_id" ref="crm.model_crm_lead"/>
+        <field name="body_html" type="html">
+            <div style="font-family: Arial; font-size: 12px;">
+                <p>Dear <t t-out="object.create_uid.name"/>,</p>
+                
+                <p>Great news! Your lead "<strong><t t-out="object.name"/></strong>" has been approved and is now visible on our website.</p>
+                
+                <p>
+                    <a t-attf-href="/leads/{{ object.id }}">
+                        View on Website
+                    </a>
+                </p>
+                
+                <p>Best regards,<br/>CRM Team</p>
+            </div>
+        </field>
+    </record>
+    
+    <record id="email_lead_rejected" model="mail.template">
+        <field name="name">Lead Rejected</field>
+        <field name="email_from">{{ (object.company_id.email or object.env.user.company_id.email) }}</field>
+        <field name="subject">Your Lead Needs Revision: {{ object.name }}</field>
+        <field name="model_id" ref="crm.model_crm_lead"/>
+        <field name="body_html" type="html">
+            <div style="font-family: Arial; font-size: 12px;">
+                <p>Hello <t t-out="object.create_uid.name"/>,</p>
+                
+                <p>Your lead "<strong><t t-out="object.name"/></strong>" has been reviewed and requires some revisions:</p>
+                
+                <p><strong>Reason:</strong></p>
+                <p><t t-out="object.rejection_reason or 'Please see the details for more information'"/></p>
+                
+                <p>Please update your lead and resubmit it for approval.</p>
+                
+                <p>Thank you!</p>
+            </div>
+        </field>
+    </record>
+    
+    <record id="email_lead_inquiry" model="mail.template">
+        <field name="name">Lead Inquiry Received</field>
+        <field name="email_from">{{ (object.company_id.email or object.env.user.company_id.email) }}</field>
+        <field name="subject">New Inquiry for Lead: {{ object.name }}</field>
+        <field name="model_id" ref="crm.model_crm_lead"/>
+        <field name="body_html" type="html">
+            <div style="font-family: Arial; font-size: 12px;">
+                <p>Hello,</p>
+                
+                <p>You have received a new inquiry on a lead!</p>
+                
+                <table style="border: 1px solid #ccc; padding: 10px;">
+                    <tr><td><strong>Lead Opportunity:</strong></td><td><t t-out="object.name"/></td></tr>
+                    <tr><td><strong>From:</strong></td><td><t t-out="object.email_from"/></td></tr>
+                    <tr><td><strong>Phone:</strong></td><td><t t-out="object.phone"/></td></tr>
+                    <tr><td><strong>Message:</strong></td><td><t t-out="object.description"/></td></tr>
+                </table>
+                
+                <p>
+                    <a t-attf-href="/web#id={{ object.id }}&amp;model=crm.lead&amp;view_type=form" style="background-color: #007bff; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px;">
+                        View Opportunity
+                    </a>
+                </p>
+                
+                <p>Thank you,<br/>Website CRM</p>
+            </div>
+        </field>
+    </record>
+
+</odoo>

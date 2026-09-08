@@ -5,7 +5,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - [%(levelname)s] - 
 logger = logging.getLogger("TestTask9")
 
 ODOO_URL = "http://localhost:8069"
-ODOO_DB = "odoo_db"
+ODOO_DB = "odoo2_db"
 USER = "admin"
 PASSWORD = "admin"
 

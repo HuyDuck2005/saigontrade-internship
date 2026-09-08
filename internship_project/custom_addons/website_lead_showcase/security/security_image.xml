@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Quyền cho khách vãng lai (Chỉ xem) -->
+        <record id="access_lead_image_public_xml" model="ir.model.access">
+            <field name="name">access.lead.image.public.xml</field>
+            <field name="model_id" ref="model_lead_image"/>
+            <field name="perm_read">1</field>
+            <field name="perm_write">0</field>
+            <field name="perm_create">0</field>
+            <field name="perm_unlink">0</field>
+        </record>
+        
+        <!-- Quyền cho nhân viên nội bộ (Toàn quyền) -->
+        <record id="access_lead_image_user_xml" model="ir.model.access">
+            <field name="name">access.lead.image.user.xml</field>
+            <field name="model_id" ref="model_lead_image"/>
+            <field name="group_id" ref="base.group_user"/>
+            <field name="perm_read">1</field>
+            <field name="perm_write">1</field>
+            <field name="perm_create">1</field>
+            <field name="perm_unlink">1</field>
+        </record>
+    </data>
+</odoo>

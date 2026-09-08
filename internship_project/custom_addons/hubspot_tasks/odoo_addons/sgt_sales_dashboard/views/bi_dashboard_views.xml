@@ -17,13 +17,11 @@
         <field name="model">crm.lead</field>
         <field name="inherit_id" ref="crm.view_crm_case_opportunities_filter"/>
         <field name="arch" type="xml">
-            <xpath expr="//search" position="inside">
-                <separator/>
-                <group expand="0" string="Nhóm theo Kỳ (Slicers)">
-                    <filter string="Theo Năm" name="groupby_year" context="{'group_by':'create_date:year'}"/>
-                    <filter string="Theo Quý" name="groupby_quarter" context="{'group_by':'create_date:quarter'}"/>
-                    <filter string="Theo Tháng" name="groupby_month" context="{'group_by':'create_date:month'}"/>
-                </group>
+            <!-- Sửa lỗi Odoo 19: Chèn thẳng filter vào group mặc định của view gốc -->
+            <xpath expr="//search/group" position="inside">
+                <filter string="Theo Năm" name="groupby_year" context="{'group_by':'create_date:year'}"/>
+                <filter string="Theo Quý" name="groupby_quarter" context="{'group_by':'create_date:quarter'}"/>
+                <filter string="Theo Tháng" name="groupby_month" context="{'group_by':'create_date:month'}"/>
             </xpath>
         </field>
     </record>

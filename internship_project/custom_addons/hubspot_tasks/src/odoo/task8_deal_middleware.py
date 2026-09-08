@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - [%(levelname)s] - 
 logger = logging.getLogger("Task8_Middleware_Advanced")
 
 ODOO_URL = os.getenv("ODOO_URL", "http://localhost:8069")
-ODOO_DB = os.getenv("ODOO_DB", "odoo_db")
+ODOO_DB = os.getenv("ODOO_DB", "odoo2_db")
 ODOO_USERNAME = os.getenv("ODOO_USERNAME", "admin")
 ODOO_PASSWORD = os.getenv("ODOO_PASSWORD", "admin")
 API_MIDDLEWARE_KEY = os.getenv("API_MIDDLEWARE_KEY", "sgt_secret_api_key_2026")
@@ -78,7 +78,7 @@ def create_crm_deal(
         partner_id = None
         partner_domain = []
         if phone:
-            partner_domain = ['|', ('phone', '=', phone), ('mobile', '=', phone)]
+            partner_domain = ['|', ('phone', '=', phone), ('phone', '=', phone)]
         elif email:
             partner_domain = [('email', '=', email)]
 
@@ -144,5 +144,50 @@ def create_crm_deal(
             IDEMPOTENCY_CACHE[idempotency_key] = response_data
 
         return response_data
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+class AttachmentPayload(BaseModel):
+    deal_id: int = Field(..., description="ID ca CRM Deal")
+    filename: str = Field(..., description="TAn file A-nh kA?m")
+    image_base64: str = Field(..., description="NTi dung file dng base64")
+    mime_type: str = Field(..., description="MIME type (image/png, image/jpeg, application/pdf)")
+
+@app.post("/api/crm/attachment", status_code=status.HTTP_201_CREATED)
+def upload_crm_attachment(
+    payload: AttachmentPayload,
+    x_api_key: str = Depends(verify_api_key)
+):
+    if payload.mime_type not in ["image/png", "image/jpeg", "application/pdf"]:
+        raise HTTPException(status_code=400, detail="Invalid MIME type. Only png, jpeg, and pdf are allowed.")
+    
+    size_in_bytes = (len(payload.image_base64) * 3) / 4
+    if payload.image_base64.endswith('=='):
+        size_in_bytes -= 2
+    elif payload.image_base64.endswith('='):
+        size_in_bytes -= 1
+        
+    if size_in_bytes > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File size exceeds 10MB limit.")
+        
+    models, uid = get_odoo_connection()
+    
+    try:
+        attachment_vals = {
+            'name': payload.filename,
+            'type': 'binary',
+            'datas': payload.image_base64,
+            'res_model': 'crm.lead',
+            'res_id': payload.deal_id,
+            'mimetype': payload.mime_type,
+        }
+        
+        attachment_id = models.execute_kw(ODOO_DB, uid, ODOO_PASSWORD, 'ir.attachment', 'create', [attachment_vals])
+        
+        return {
+            "success": True,
+            "attachment_id": attachment_id,
+            "message": "Attachment uploaded and linked to Deal successfully."
+        }
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))

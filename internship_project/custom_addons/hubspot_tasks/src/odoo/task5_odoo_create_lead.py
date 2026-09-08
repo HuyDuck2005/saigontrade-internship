@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - [%(levelname)s] - 
 logger = logging.getLogger("Task5_Odoo_Lead")
 
 ODOO_URL = os.getenv("ODOO_URL", "http://localhost:8069")
-ODOO_DB = os.getenv("ODOO_DB", "odoo_db")
+ODOO_DB = os.getenv("ODOO_DB", "odoo2_db")
 ODOO_USERNAME = os.getenv("ODOO_USERNAME", "admin")
 ODOO_PASSWORD = os.getenv("ODOO_PASSWORD", "admin")
 
@@ -35,6 +35,11 @@ class OdooCRMClient:
             raise ConnectionError("Authentication or Connection failed")
 
     def create_lead(self, lead_data: Dict[str, Any]) -> Dict[str, Any]:
+        
+        if not lead_data.get('name'):
+            raise ValueError("Missing required field: 'name'")
+    
+        
         if not lead_data.get("name"):
             return {"success": False, "error": "Trường 'name' (Tên cơ hội/Lead) là bắt buộc."}
         

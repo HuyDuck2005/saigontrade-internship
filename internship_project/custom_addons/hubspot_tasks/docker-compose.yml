@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # HỆ THỐNG ODOO 1 (MÁY LOCAL - CỔNG 8069 - DÙNG ODOO_DB)
+  db1:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=odoo
+      - POSTGRES_USER=odoo
+
+  odoo1:
+    image: odoo:19.0
+    depends_on:
+      - db1
+    ports:
+      - "8069:8069"
+    volumes:
+      - ./odoo_addons:/mnt/extra-addons
+    environment:
+      - HOST=db1
+      - USER=odoo
+      - PASSWORD=odoo
+    command: odoo -d odoo_db --db_host=db1 --db_user=odoo --db_password=odoo
+
+  # HỆ THỐNG ODOO 2 (MÁY REMOTE - CỔNG 8070 - DÙNG ODOO2_DB)
+  db2:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=odoo
+      - POSTGRES_USER=odoo
+
+  odoo2:
+    image: odoo:19.0
+    depends_on:
+      - db2
+    ports:
+      - "8070:8069"
+    volumes:
+      - ./odoo_addons:/mnt/extra-addons
+    environment:
+      - HOST=db2
+      - USER=odoo
+      - PASSWORD=odoo
+    command: odoo -d odoo2_db --db_host=db2 --db_user=odoo --db_password=odoo

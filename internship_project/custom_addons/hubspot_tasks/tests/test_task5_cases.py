@@ -17,7 +17,7 @@ class TestOdooCRMClient(unittest.TestCase):
         
         mock_server_proxy.side_effect = [mock_common, mock_objects]
 
-        client = OdooCRMClient("http://localhost:8069", "odoo_db", "admin", "admin")
+        client = OdooCRMClient("http://localhost:8069", "odoo2_db", "admin", "admin")
         
         lead_data = {
             "name": "Cơ hội hợp tác - Doanh nghiệp SGT 2026",
@@ -36,7 +36,7 @@ class TestOdooCRMClient(unittest.TestCase):
 
     def test_create_lead_missing_name(self):
         print("\n[TEST CASE 2] Bắt lỗi khi thiếu trường 'name' bắt buộc:")
-        client = OdooCRMClient("http://localhost:8069", "odoo_db", "admin", "admin")
+        client = OdooCRMClient("http://localhost:8069", "odoo2_db", "admin", "admin")
         with self.assertRaises(ValueError) as ctx:
             client.create_lead({"name": "", "contact_name": "Test Missing Name"})
         print(f"👉 Bắt lỗi thành công (Validation): {ctx.exception}")
@@ -49,7 +49,7 @@ class TestOdooCRMClient(unittest.TestCase):
         mock_common.authenticate.return_value = False  # Đăng nhập thất bại (UID = 0 / False)
         mock_server_proxy.return_value = mock_common
 
-        bad_client = OdooCRMClient("http://localhost:8069", "odoo_db", "admin", "sai_pass")
+        bad_client = OdooCRMClient("http://localhost:8069", "odoo2_db", "admin", "sai_pass")
         
         lead_data = {"name": "Test Bad Auth"}
         res = bad_client.create_lead(lead_data)

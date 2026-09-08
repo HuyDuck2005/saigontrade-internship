@@ -1,0 +1,28 @@
+version: '3.1'
+services:
+  web:
+    image: odoo:19.0
+    depends_on:
+      - db
+    ports:
+      - "18069:8069"
+    volumes:
+      # Dòng này cực kỳ quan trọng: Liên kết thư mục custom_addons ở ngoài vào trong Odoo
+      - ./custom_addons:/mnt/extra-addons
+      - odoo_web_data:/var/lib/odoo
+    environment:
+      - HOST=db
+      - USER=odoo
+      - PASSWORD=myodoo
+  db:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=myodoo
+      - POSTGRES_USER=odoo
+    volumes:
+      - odoo_db_data:/var/lib/postgresql/data
+
+volumes:
+  odoo_web_data:
+  odoo_db_data:

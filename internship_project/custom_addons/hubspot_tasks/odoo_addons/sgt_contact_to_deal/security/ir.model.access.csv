@@ -1,0 +1,2 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_create_deal_wizard,create.deal.wizard,model_create_deal_wizard,base.group_user,1,1,1,1

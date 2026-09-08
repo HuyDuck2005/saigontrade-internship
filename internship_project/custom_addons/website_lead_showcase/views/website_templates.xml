@@ -1,0 +1,459 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    
+    <!-- Leads List Template -->
+    <template id="leads_list" name="Leads List">
+        <t t-call="website.layout">
+            <div class="container my-5">
+                
+                <!-- Header -->
+                <div class="row mb-5">
+                    <div class="col-lg-8">
+                        <h1 class="display-4">Business Opportunities</h1>
+                        <p class="lead">Discover the latest leads and opportunities</p>
+                    </div>
+                </div>
+                
+                <!-- Filters -->
+                <div class="row mb-4">
+                    <div class="col-lg-12">
+                        <form method="get" class="row g-3">
+                            
+                            <!-- Search -->
+                            <div class="col-md-4">
+                                <input type="text" 
+                                       name="search" 
+                                       class="form-control" 
+                                       placeholder="Search leads..."
+                                       t-att-value="search_query"/>
+                            </div>
+                            
+                            <!-- Category Filter -->
+                            
+                            <div class="col-md-2">
+                                <select name="intent" class="form-select">
+                                    <option value="">Tất cả nhu cầu</option>
+                                    <option value="buy" t-att-selected="selected_intent == 'buy'">TÌM MUA</option>
+                                    <option value="sell" t-att-selected="selected_intent == 'sell'">CHÀO BÁN</option>
+                                </select>
+                            </div>
+
+                                <div class="col-md-3">
+                                <select name="category_id" class="form-select">
+                                    <option value="">All Categories</option>
+                                    <t t-foreach="categories" t-as="cat">
+                                        <option t-att-value="cat.id"
+                                                t-att-selected="str(cat.id) == str(selected_category)">
+                                            <t t-esc="cat.name"/>
+                                        </option>
+                                    </t>
+                                </select>
+                            </div>
+                            
+                            <!-- Country Filter -->
+                            <div class="col-md-3">
+                                <select name="country" class="form-select">
+                                    <option value="">All Countries</option>
+                                    <t t-foreach="countries" t-as="country_opt">
+                                        <option t-att-value="country_opt"
+                                                t-att-selected="country_opt == selected_country">
+                                            <t t-esc="country_opt"/>
+                                        </option>
+                                    </t>
+                                </select>
+                            </div>
+                            
+                            <!-- Search Button -->
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    Search
+                                </button>
+                            </div>
+                            
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Leads Grid -->
+                <div class="row">
+                    <t t-if="leads">
+                        <t t-foreach="leads" t-as="lead">
+                            <div class="col-lg-4 col-md-6 mb-4">
+                                <div class="card h-100 lead-card shadow-sm">
+                                    
+                                    <!-- Lead Image -->
+                                    <div class="lead-image-container">
+                                        <t t-if="lead.lead_image">
+                                            <img t-attf-src="/web/image/crm.lead/{{ lead.id }}/lead_image" 
+                                                 class="card-img-top" 
+                                                 alt="Lead"/>
+                                        </t>
+                                        <t t-else="">
+                                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center"
+                                                 style="height: 250px;">
+                                                <i class="fa fa-image fa-3x text-muted"></i>
+                                            </div>
+                                        </t>
+                                    </div>
+                                    
+                                    <!-- Card Body -->
+                                    <div class="card-body">
+                                        
+                                        <!-- Category Badge -->
+                                        
+                                        <t t-if="lead.lead_intent">
+                                            <span t-attf-class="badge mb-2 {{ 'bg-danger' if lead.lead_intent == 'buy' else 'bg-success' if lead.lead_intent == 'sell' else 'bg-info' }}">
+                                                <t t-esc="dict(lead.fields_get(['lead_intent'])['lead_intent']['selection'])[lead.lead_intent]"/>
+                                            </span>
+                                        </t>
+    
+                                        <t t-if="lead.lead_category">
+                                            <span class="badge bg-secondary mb-2">
+                                                <t t-esc="lead.lead_category.name"/>
+                                            </span>
+                                        </t>
+                                        
+                                        <!-- Lead Title -->
+                                        <h5 class="card-title">
+                                            <t t-esc="lead.name"/>
+                                        </h5>
+                                        
+                                        <!-- Country/Region -->
+                                        <p class="text-muted small">
+                                            <i class="fa fa-map-marker"></i>
+                                            <t t-esc="lead.country_region"/>
+                                        </p>
+                                        
+                                        <!-- Description -->
+                                        <p class="card-text text-truncate" 
+                                           t-att-title="lead.short_description">
+                                            <t t-esc="lead.short_description"/>
+                                        </p>
+                                        
+                                        <!-- Published Date -->
+                                        <p class="text-muted small">
+                                            <i class="fa fa-calendar"></i>
+                                            Posted: 
+                                            <t t-if="lead.website_published_date">
+                                                <t t-esc="lead.website_published_date.strftime('%d/%m/%Y')"/>
+                                            </t>
+                                        </p>
+                                        
+                                        <!-- View Count -->
+                                        <p class="text-muted small">
+                                            <i class="fa fa-eye"></i>
+                                            <t t-esc="lead.website_view_count"/> views
+                                        </p>
+                                        
+                                    </div>
+                                    
+                                    <!-- Card Footer -->
+                                    <div class="card-footer bg-white">
+                                        <a t-attf-href="/leads/{{ lead.id }}" 
+                                           class="btn btn-primary btn-sm w-100">
+                                            View Details →
+                                        </a>
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                        </t>
+                    </t>
+                    <t t-else="">
+                        <div class="col-12">
+                            <div class="alert alert-info text-center">
+                                <h4>No leads found</h4>
+                                <p>Try adjusting your search filters</p>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+                
+                <!-- Pagination -->
+                <t t-if="total_pages &gt; 1">
+                    <nav class="mt-5">
+                        <ul class="pagination justify-content-center">
+                            
+                            <!-- Previous -->
+                            <li t-attf-class="page-item {{ 'disabled' if page == 1 else '' }}">
+                                <a class="page-link" 
+                                   t-attf-href="/leads?page={{ page - 1 }}">
+                                    Previous
+                                </a>
+                            </li>
+                            
+                            <!-- Page numbers -->
+                            <t t-foreach="range(1, total_pages + 1)" t-as="pg">
+                                <li t-attf-class="page-item {{ 'active' if pg == page else '' }}">
+                                    <a class="page-link" t-attf-href="/leads?page={{ pg }}">
+                                        <t t-esc="pg"/>
+                                    </a>
+                                </li>
+                            </t>
+                            
+                            <!-- Next -->
+                            <li t-attf-class="page-item {{ 'disabled' if page == total_pages else '' }}">
+                                <a class="page-link" 
+                                   t-attf-href="/leads?page={{ page + 1 }}">
+                                    Next
+                                </a>
+                            </li>
+                            
+                        </ul>
+                    </nav>
+                </t>
+                
+            </div>
+        </t>
+    </template>
+    
+    <!-- Lead Detail Template -->
+    <template id="lead_detail" name="Lead Detail">
+        <t t-call="website.layout">
+            <div class="container my-5">
+                
+                <!-- Back Link -->
+                <div class="mb-4">
+                    <a href="/leads" class="btn btn-outline-secondary">
+                        ← Back to Leads
+                    </a>
+                </div>
+                
+                <div class="row">
+                    
+                    <!-- Main Content -->
+                    <div class="col-lg-8">
+                        
+                        <!-- Lead Image -->
+                        <div class="mb-4">
+                            <t t-if="lead.lead_image">
+                                <img t-attf-src="/web/image/crm.lead/{{ lead.id }}/lead_image" 
+                                     class="img-fluid rounded" 
+                                     alt="Lead"/>
+                            </t>
+                        </div>
+                        
+                        <!-- Lead Info -->
+                        <h1 class="mb-3"><t t-esc="lead.name"/></h1>
+                        
+                        <!-- Meta Info -->
+                        <div class="row text-muted mb-4">
+                            <div class="col-md-6">
+                                <p>
+                                    <i class="fa fa-map-marker"></i>
+                                    <strong>Location:</strong>
+                                    <t t-esc="lead.country_region"/>
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <p>
+                                    <i class="fa fa-calendar"></i>
+                                    <strong>Posted:</strong>
+                                    <t t-if="lead.website_published_date">
+                                        <t t-esc="lead.website_published_date.strftime('%d/%m/%Y')"/>
+                                    </t>
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <!-- Category -->
+                        
+                                        <t t-if="lead.lead_intent">
+                                            <span t-attf-class="badge mb-2 {{ 'bg-danger' if lead.lead_intent == 'buy' else 'bg-success' if lead.lead_intent == 'sell' else 'bg-info' }}">
+                                                <t t-esc="dict(lead.fields_get(['lead_intent'])['lead_intent']['selection'])[lead.lead_intent]"/>
+                                            </span>
+                                        </t>
+    
+                                        <t t-if="lead.lead_category">
+                            <p class="mb-4">
+                                <span class="badge bg-primary p-2">
+                                    <t t-esc="lead.lead_category.name"/>
+                                </span>
+                            </p>
+                        </t>
+                        
+                        <!-- Full Description -->
+                        <div class="mb-5">
+                            <h3>Description</h3>
+                            <div class="lead-full-description">
+                                <t t-esc="lead.description or lead.short_description"/>
+                            </div>
+                        </div>
+                        
+                        <!-- Related Leads -->
+                        <t t-if="related_leads">
+                            <div class="mb-5">
+                                <h3>Related Opportunities</h3>
+                                <div class="row">
+                                    <t t-foreach="related_leads" t-as="related">
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card h-100">
+                                                <t t-if="related.lead_image">
+                                                    <img t-attf-src="/web/image/crm.lead/{{ related.id }}/lead_image"
+                                                         class="card-img-top"
+                                                         alt="Related Lead"
+                                                         style="height: 200px; object-fit: cover;"/>
+                                                </t>
+                                                <div class="card-body">
+                                                    <h6 class="card-title">
+                                                        <t t-esc="related.name"/>
+                                                    </h6>
+                                                    <p class="card-text small">
+                                                        <t t-esc="str(related.short_description)[:100]"/>...
+                                                    </p>
+                                                </div>
+                                                <div class="card-footer bg-white">
+                                                    <a t-attf-href="/leads/{{ related.id }}"
+                                                       class="btn btn-sm btn-primary">
+                                                        View
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+                        </t>
+                        
+                    </div>
+                    
+                    <!-- Sidebar -->
+                    <div class="col-lg-4">
+                        
+                        <!-- Contact Form -->
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i class="fa fa-handshake-o"></i> Yêu cầu Kết nối / Báo giá</h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="lead_contact_form" onsubmit="submitLeadForm(event)">
+                                    
+                                    <!-- Name -->
+                                    <div class="mb-3">
+                                        <label class="form-label">Tên Doanh nghiệp / Cá nhân *</label>
+                                        <input type="text" 
+                                               name="contact_name" 
+                                               class="form-control" 
+                                               required="1"/>
+                                    </div>
+                                    
+                                    <!-- Email -->
+                                    <div class="mb-3">
+                                        <label class="form-label">Email liên hệ *</label>
+                                        <input type="email" 
+                                               name="contact_email" 
+                                               class="form-control" 
+                                               required="1"/>
+                                    </div>
+                                    
+                                    <!-- Phone -->
+                                    <div class="mb-3">
+                                        <label class="form-label">Số điện thoại</label>
+                                        <input type="tel" 
+                                               name="contact_phone" 
+                                               class="form-control"/>
+                                    </div>
+                                    
+                                    <!-- Message -->
+                                    <div class="mb-3">
+                                        <label class="form-label">Giới thiệu năng lực &amp; Lời nhắn *</label>
+                                        <textarea name="message" 
+                                                  class="form-control" 
+                                                  rows="5" 
+                                                  required="1"></textarea>
+                                    </div>
+                                    
+                                    <!-- Submit -->
+                                    <button type="submit" class="btn btn-success w-100">
+                                        Gửi Yêu Cầu Kết Nối
+                                    </button>
+                                    
+                                </form>
+                                
+                                <!-- Form Status Messages -->
+                                <div id="form_status_message" class="mt-3"></div>
+
+                                <script type="text/javascript">
+                                    async function submitLeadForm(e) {
+                                        e.preventDefault();
+                                        const form = e.target;
+                                        const parts = window.location.pathname.split('/');
+                                        const leadId = parts[parts.length - 1];
+                                        
+                                        const submitBtn = form.querySelector('button[type="submit"]');
+                                        const originalText = submitBtn.textContent;
+                                        submitBtn.disabled = true;
+                                        submitBtn.textContent = 'Đang xử lý...';
+                                        
+                                        try {
+                                            const formData = new FormData(form);
+                                            const response = await fetch(`/leads/${leadId}/contact`, {
+                                                method: 'POST',
+                                                body: formData
+                                            });
+                                            
+                                            const result = await response.json();
+                                            const statusDiv = document.getElementById('form_status_message');
+                                            
+                                            if (result.status === 'success') {
+                                                statusDiv.innerHTML = `<div class="alert alert-success mt-3">${result.message}</div>`;
+                                                form.reset();
+                                            } else {
+                                                statusDiv.innerHTML = `<div class="alert alert-danger mt-3">${result.message}</div>`;
+                                            }
+                                        } catch (error) {
+                                            document.getElementById('form_status_message').innerHTML = '<div class="alert alert-danger mt-3">Lỗi kết nối. Vui lòng tải lại trang!</div>';
+                                        } finally {
+                                            submitBtn.disabled = false;
+                                            submitBtn.textContent = originalText;
+                                        }
+                                    }
+                                </script>
+
+                            </div>
+                        </div>
+                        
+                        <!-- Block Bảo mật thông tin -->
+                        <div class="card shadow-sm mt-4 border-warning">
+                            <div class="card-header bg-warning text-dark">
+                                <h5 class="mb-0"><i class="fa fa-lock"></i> Thông tin đối tác</h5>
+                            </div>
+                            <div class="card-body text-center">
+                                <p class="text-muted mb-2">Thông tin liên hệ trực tiếp đã được bảo mật theo quy định của nền tảng.</p>
+                                <p class="mb-0 fw-bold">Vui lòng điền form phía trên để chúng tôi hỗ trợ kết nối bạn!</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Block Chia sẻ -->
+                        <div class="card shadow-sm mt-4">
+                            <div class="card-body text-center">
+                                <p class="mb-2"><strong>Chia sẻ cơ hội này:</strong></p>
+                                <button class="btn btn-outline-primary btn-sm mx-1" onclick="navigator.clipboard.writeText(window.location.href); alert('Đã copy link thành công!');">
+                                    <i class="fa fa-link"></i> Copy Link
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Stats -->
+                        <div class="card shadow-sm mt-4">
+                            <div class="card-body text-center">
+                                <p class="mb-0 text-muted">
+                                    <i class="fa fa-eye"></i>
+                                    <strong><t t-esc="lead.website_view_count"/></strong> views
+                                </p>
+                                <p class="mb-0 text-muted">
+                                    <i class="fa fa-comment"></i>
+                                    <strong><t t-esc="lead.website_contact_count"/></strong> inquiries
+                                </p>
+                            </div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                
+            </div>
+        </t>
+    </template>
+    
+</odoo>

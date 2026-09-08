@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_sync_log_tree" model="ir.ui.view">
+        <field name="name">sync.log.tree</field>
+        <field name="model">sync.log</field>
+        <field name="arch" type="xml">
+            <tree string="Sync Logs" decoration-danger="status == 'failed'" decoration-success="status == 'success'" decoration-info="status == 'pending'">
+                <field name="name"/>
+                <field name="model_name"/>
+                <field name="record_id"/>
+                <field name="status"/>
+                <field name="retry_count"/>
+                <field name="create_date"/>
+                <button name="action_retry" type="object" string="Retry" class="btn-secondary" invisible="status == 'success'"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_sync_log_form" model="ir.ui.view">
+        <field name="name">sync.log.form</field>
+        <field name="model">sync.log</field>
+        <field name="arch" type="xml">
+            <form string="Sync Log">
+                <header>
+                    <button name="action_retry" type="object" string="Retry Sync" class="oe_highlight" invisible="status == 'success'"/>
+                    <field name="status" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="model_name"/>
+                            <field name="record_id"/>
+                        </group>
+                        <group>
+                            <field name="retry_count"/>
+                            <field name="create_date" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Error Details" name="error_details">
+                            <field name="error_message"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_sync_log" model="ir.actions.act_window">
+        <field name="name">Monitoring Center</field>
+        <field name="res_model">sync.log</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <!-- Top menu item -->
+    <menuitem id="menu_sync_monitoring_root" name="Sync Monitoring" sequence="10"/>
+    <menuitem id="menu_sync_log" name="Sync Logs" parent="menu_sync_monitoring_root" action="action_sync_log" sequence="10"/>
+</odoo>

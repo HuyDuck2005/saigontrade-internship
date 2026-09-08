@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_export_deal_wizard_form" model="ir.ui.view">
+        <field name="name">export.deal.wizard.form</field>
+        <field name="model">export.deal.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Export Deals to Excel">
+                <p class="oe_grey" invisible="file_data != False">
+                    Click 'Export' to download the Deals pipeline in Excel format.
+                </p>
+                <group invisible="file_data == False">
+                    <field name="file_name" invisible="1"/>
+                    <field name="file_data" filename="file_name" readonly="1"/>
+                </group>
+                <footer>
+                    <button name="action_export_xlsx" type="object" string="Export" class="btn-primary" invisible="file_data != False"/>
+                    <button string="Close" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_export_deal_wizard" model="ir.actions.act_window">
+        <field name="name">Export Deals (XLSX)</field>
+        <field name="res_model">export.deal.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="crm.model_crm_lead"/>
+        <field name="binding_view_types">list</field>
+    </record>
+</odoo>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    
+    <!-- Action for Lead Management -->
+    <record id="action_crm_lead_website_showcase" model="ir.actions.act_window">
+        <field name="name">Website Leads</field>
+        <field name="res_model">crm.lead</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('crm_lead_tree_view_website')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('crm_lead_view_form_website_showcase')})
+        ]"/>
+        <field name="search_view_id" ref="crm_lead_search_view_website"/>
+    </record>
+
+    <!-- Top-level Menu để dễ nhìn thấy trên giao diện -->
+    <menuitem id="menu_lead_website_root" 
+              name="Website Leads" 
+              sequence="20"/>
+    
+    <menuitem id="menu_lead_approval" 
+              name="Leads Showcase" 
+              parent="menu_lead_website_root" 
+              action="action_crm_lead_website_showcase"
+              sequence="10"/>
+    
+</odoo>

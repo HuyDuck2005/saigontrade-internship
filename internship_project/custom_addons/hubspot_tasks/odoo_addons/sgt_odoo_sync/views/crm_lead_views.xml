@@ -1,12 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
         <record id="view_crm_lead_form_inherit_sync" model="ir.ui.view">
-            <field name="name">crm.lead.form.inherit.sync</field>
-            <field name="model">crm.lead</field>
-            <field name="inherit_id" ref="crm.crm_lead_view_form"/>
-            <field name="arch" type="xml">
-                <!-- Nút bấm trên Header -->
+            <name>crm.lead.form.inherit.sync</name>
+            <model>crm.lead</model>
+            <inherit_id ref="crm.crm_lead_view_form"/>
+            <arch type="xml">
                 <xpath expr="//header" position="inside">
                     <button name="action_create_contact_both" 
                             string="Tạo Contact Odoo1 &amp; Odoo2" 
@@ -18,8 +17,6 @@
                             class="btn-secondary"
                             invisible="sync_status != 'failed'"/>
                 </xpath>
-
-                <!-- Tab Notebook -->
                 <xpath expr="//notebook" position="inside">
                     <page string="Trạng thái Sync Odoo 2" name="sync_odoo2_page">
                         <group>
@@ -38,7 +35,7 @@
                         </group>
                     </page>
                 </xpath>
-            </field>
+            </arch>
         </record>
     </data>
 </odoo>

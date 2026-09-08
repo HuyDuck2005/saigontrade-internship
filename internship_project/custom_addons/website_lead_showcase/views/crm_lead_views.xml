@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    
+    <!-- Form View riêng cho quản lý Website Lead -->
+    <record id="crm_lead_view_form_website_showcase" model="ir.ui.view">
+        <field name="name">crm.lead.form.website.showcase</field>
+        <field name="model">crm.lead</field>
+        <field name="arch" type="xml">
+            <form string="Lead Website Management">
+                <header>
+                    <button name="action_approve" 
+                            type="object" 
+                            class="oe_highlight" 
+                            string="Phê duyệt"
+                            invisible="approval_status == 'approved'"/>
+                    <button name="action_reject" 
+                            type="object" 
+                            string="Từ chối"
+                            invisible="approval_status in ['approved', 'rejected']"/>
+                    <button name="action_resubmit" 
+                            type="object" 
+                            string="Gửi lại"
+                            invisible="approval_status != 'rejected'"/>
+                    <field name="approval_status" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="Tên Lead..."/></h1>
+                    </div>
+                    <group>
+                        <group string="Trạng thái &amp; Duyệt">
+                            <field name="website_visible"/>
+                            <field name="approved_by" readonly="1"/>
+                            <field name="approval_date" readonly="1"/>
+                        </group>
+                        <group string="Thông tin hiển thị Website">
+                            <field name="lead_image" widget="image" options="{'size': [256, 256]}"/>
+                            <field name="lead_intent" widget="radio" options="{'horizontal': true}"/>
+                            <field name="lead_category"/>
+                            <field name="country_region"/>
+                            <field name="website_published_date" readonly="1"/>
+                        </group>
+                    </group>
+                    
+                    <group string="Mô tả">
+                        <field name="short_description" nolabel="1" placeholder="Mô tả ngắn hiển thị trên card..."/>
+                        <field name="description" placeholder="Mô tả chi tiết..."/>
+                    </group>
+                    
+                    <group string="Thông tin liên hệ">
+                        <field name="contact_person"/>
+                        <field name="contact_phone"/>
+                        <field name="contact_email"/>
+                    </group>
+                    
+                    <group string="Thống kê Website">
+                        <field name="website_view_count" readonly="1"/>
+                        <field name="website_contact_count" readonly="1"/>
+                        <field name="referred_lead_id"/>
+                    </group>
+                    
+                    <group string="Lý do từ chối" invisible="approval_status != 'rejected'">
+                        <field name="rejection_reason" nolabel="1"/>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Lịch sử duyệt" name="approval_history_page">
+                            <field name="approval_history" readonly="1">
+                                <list create="0" delete="0">
+                                    <field name="create_date"/>
+                                    <field name="action"/>
+                                    <field name="performed_by"/>
+                                    <field name="notes"/>
+                                </list>
+                            </field>
+                        </page>
+                    
+                        
+    
+                        
+                        <page string="Ảnh sản phẩm &amp; Nhà sản xuất" name="product_images">
+                            <group string="Quản lý thư viện ảnh sản phẩm &amp; nhà sản xuất (Có thể thêm nhiều ảnh và ghi miêu tả)">
+                                <field name="gallery_image_ids" mode="list">
+                                    <list editable="bottom">
+                                        <field name="image" widget="image" options="{'size': [80, 80]}" string="Hình ảnh"/>
+                                        <field name="name" string="Miêu tả / Tên sản phẩm"/>
+                                    </list>
+                                </field>
+                            </group>
+                        </page>
+
+                        </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- List View cho quản lý Lead -->
+    <record id="crm_lead_tree_view_website" model="ir.ui.view">
+        <field name="name">crm.lead.tree.website</field>
+        <field name="model">crm.lead</field>
+        <field name="arch" type="xml">
+            <list string="Leads - Website Management"
+                  decoration-success="approval_status=='approved'"
+                  decoration-warning="approval_status=='draft'"
+                  decoration-danger="approval_status=='rejected'">
+                <field name="name"/>
+                <field name="lead_intent" widget="radio" options="{'horizontal': true}"/>
+                            <field name="lead_category"/>
+                <field name="approval_status" widget="badge"/>
+                <field name="website_visible"/>
+                <field name="approval_date"/>
+                <field name="website_view_count"/>
+            </list>
+        </field>
+    </record>
+    
+    <!-- Search View -->
+    <record id="crm_lead_search_view_website" model="ir.ui.view">
+        <field name="name">crm.lead.search.website</field>
+        <field name="model">crm.lead</field>
+        <field name="arch" type="xml">
+            <search string="Leads">
+                <field name="name" string="Lead Name"/>
+                <field name="lead_intent" widget="radio" options="{'horizontal': true}"/>
+                            <field name="lead_category"/>
+                <field name="approval_status"/>
+                <separator/>
+                <filter name="approved" 
+                        string="Approved" 
+                        domain="[('approval_status', '=', 'approved')]"/>
+                <filter name="draft" 
+                        string="Draft" 
+                        domain="[('approval_status', '=', 'draft')]"/>
+                <filter name="rejected" 
+                        string="Rejected" 
+                        domain="[('approval_status', '=', 'rejected')]"/>
+                <separator/>
+                <filter name="website_visible" 
+                        string="Visible on Website" 
+                        domain="[('website_visible', '=', True)]"/>
+            </search>
+        </field>
+    </record>
+    
+</odoo>

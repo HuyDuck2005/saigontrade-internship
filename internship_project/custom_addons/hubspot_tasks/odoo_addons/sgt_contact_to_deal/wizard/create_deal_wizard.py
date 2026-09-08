@@ -17,7 +17,6 @@ class CreateDealWizard(models.TransientModel):
     event_location = fields.Char(string='Địa điểm sự kiện', default='TP. Hồ Chí Minh')
     notes = fields.Text(string='Ghi chú nội dung')
     
-    # Cải tiến nghiệp vụ: Tùy chọn xử lý khi trùng lặp hoặc khác chủ sở hữu
     duplicate_action = fields.Selection([
         ('allow', 'Vẫn tạo Deal mới bình thường (Khuyên dùng)'),
         ('skip', 'Bỏ qua nếu khách hàng đã có Deal trong sự kiện này')
@@ -39,38 +38,35 @@ class CreateDealWizard(models.TransientModel):
         created_lead_ids = []
         skipped_count = 0
         ownership_warnings = 0
-
         current_user = self.env.user
 
         for partner in self.partner_ids:
-            # 1. KIỂM TRA LỖI 1: Trùng lặp sự kiện
-            if self.event:
+            lead_name_expected = f"{self.deal_name} - {partner.name}"
+
+            # FIX: So sánh chính xác theo Tên Deal thay vì Ghi chú HTML
+            if self.deal_name:
                 existing_deal = self.env['crm.lead'].search([
                     ('partner_id', '=', partner.id),
-                    ('description', 'like', f"Event: {self.event}")
+                    ('name', '=', lead_name_expected)
                 ], limit=1)
                 
                 if existing_deal and self.duplicate_action == 'skip':
                     skipped_count += 1
-                    continue # Bỏ qua nếu user chọn chế độ skip
+                    continue 
 
-            # 2. KIỂM TRA LỖI 2: Xung đột Phân công Salesperson (Deal Ownership)
-            # Nếu partner đã có người phụ trách khác người đang bấm nút tạo
             assigned_salesperson = partner.user_id
             deal_user_id = current_user.id
             
             if assigned_salesperson and assigned_salesperson.id != current_user.id:
                 ownership_warnings += 1
-                # Nghiệp vụ chuẩn: Giữ nguyên người phụ trách cũ cho khách hàng để tránh tranh chấp
                 deal_user_id = assigned_salesperson.id
 
-            lead_name = f"{self.deal_name} - {partner.name}"
             lead_vals = {
-                'name': lead_name,
+                'name': lead_name_expected,
                 'partner_id': partner.id,
-                'user_id': deal_user_id, # Giữ đúng chủ sở hữu cũ nếu có
+                'user_id': deal_user_id,
                 'contact_name': partner.name,
-                'phone': partner.phone or partner.mobile or '',
+                'phone': partner.phone or getattr(partner, 'mobile', '') or '',
                 'email_from': partner.email or '',
                 'expected_revenue': self.expected_revenue,
                 'description': f"Event: {self.event or 'N/A'} | Location: {self.event_location or 'N/A'}\nNotes: {self.notes or ''}".strip(),
@@ -79,7 +75,7 @@ class CreateDealWizard(models.TransientModel):
             lead = self.env['crm.lead'].create(lead_vals)
             created_lead_ids.append(lead.id)
 
-        _logger.info(f"Wizard tạo deal hoàn tất. Tạo mới: {len(created_lead_ids)}, Bỏ qua: {skipped_count}, Cảnh báo phân công: {ownership_warnings}")
+        _logger.info(f"Wizard tạo deal hoàn tất. Tạo mới: {len(created_lead_ids)}, Bỏ qua: {skipped_count}")
 
         return {
             'name': 'Danh sách Deal vừa tạo',

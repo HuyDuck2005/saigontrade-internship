@@ -1,0 +1,6 @@
+﻿id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_sgt_remote_odoo,sgt.remote.odoo,model_sgt_remote_odoo,base.group_system,1,1,1,1
+access_sync_configuration,sync.configuration,model_sync_configuration,base.group_system,1,1,1,1
+access_sync_configuration_user,sync.configuration,model_sync_configuration,base.group_user,1,0,0,0
+
+access_sync_log,sync.log,model_sync_log,base.group_user,1,1,1,1

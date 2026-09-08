@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    
+    <record id="lead_category_real_estate" model="lead.category">
+        <field name="name">Real Estate</field>
+        <field name="code">real-estate</field>
+        <field name="description">Real estate and property investment opportunities</field>
+        <field name="icon">fa-building</field>
+        <field name="color">#FF6B6B</field>
+        <field name="sequence">10</field>
+    </record>
+    
+    <record id="lead_category_technology" model="lead.category">
+        <field name="name">Technology</field>
+        <field name="code">technology</field>
+        <field name="description">Tech startup and software opportunities</field>
+        <field name="icon">fa-laptop</field>
+        <field name="color">#4ECDC4</field>
+        <field name="sequence">20</field>
+    </record>
+    
+    <record id="lead_category_manufacturing" model="lead.category">
+        <field name="name">Manufacturing</field>
+        <field name="code">manufacturing</field>
+        <field name="description">Manufacturing and production opportunities</field>
+        <field name="icon">fa-industry</field>
+        <field name="color">#45B7D1</field>
+        <field name="sequence">30</field>
+    </record>
+    
+    <record id="lead_category_services" model="lead.category">
+        <field name="name">Services</field>
+        <field name="code">services</field>
+        <field name="description">Professional services and consulting</field>
+        <field name="icon">fa-briefcase</field>
+        <field name="color">#FFA07A</field>
+        <field name="sequence">40</field>
+    </record>
+    
+    <record id="lead_category_import_export" model="lead.category">
+        <field name="name">Import/Export</field>
+        <field name="code">import-export</field>
+        <field name="description">Trade and import/export opportunities</field>
+        <field name="icon">fa-ship</field>
+        <field name="color">#98D8C8</field>
+        <field name="sequence">50</field>
+    </record>
+    
+</odoo>

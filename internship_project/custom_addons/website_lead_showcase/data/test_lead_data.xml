@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Lead 1: Đã duyệt (Hiện trên Website) -->
+    <record id="test_lead_tech_1" model="crm.lead">
+        <field name="name">Tìm đối tác phát triển phần mềm ERP</field>
+        <field name="type">opportunity</field>
+        <field name="lead_category" ref="website_lead_showcase.lead_category_technology"/>
+        <field name="country_region">Việt Nam</field>
+        <field name="short_description">Cần tìm đội ngũ lập trình có kinh nghiệm triển khai ERP cho ngành bán lẻ.</field>
+        <field name="description">Chúng tôi đang mở rộng chuỗi cửa hàng bán lẻ và cần xây dựng một hệ thống ERP nội bộ. Yêu cầu công nghệ hiện đại, có khả năng mở rộng.</field>
+        <field name="contact_person">Nguyễn Văn A</field>
+        <field name="contact_email">nguyenvana@example.com</field>
+        <field name="approval_status">approved</field>
+        <field name="website_visible">True</field>
+        <field name="website_published_date" eval="time.strftime('%Y-%m-%d %H:%M:%S')"/>
+        <field name="lead_image">iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==</field>
+    </record>
+
+    <!-- Lead 2: Đã duyệt (Hiện trên Website) -->
+    <record id="test_lead_export_1" model="crm.lead">
+        <field name="name">Nguồn cung Nông sản xuất khẩu Nhật Bản</field>
+        <field name="type">opportunity</field>
+        <field name="lead_category" ref="website_lead_showcase.lead_category_import_export"/>
+        <field name="country_region">Nhật Bản</field>
+        <field name="short_description">Tìm nguồn cung cấp hạt điều, cà phê chất lượng cao xuất sang thị trường Nhật.</field>
+        <field name="description">Doanh nghiệp chúng tôi tại Tokyo đang tìm kiếm các nhà cung cấp nông sản uy tín tại Việt Nam để hợp tác dài hạn.</field>
+        <field name="contact_person">Trần Thị B</field>
+        <field name="contact_email">tranthib_jp@example.com</field>
+        <field name="approval_status">approved</field>
+        <field name="website_visible">True</field>
+        <field name="website_published_date" eval="time.strftime('%Y-%m-%d %H:%M:%S')"/>
+        <field name="lead_image">iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==</field>
+    </record>
+
+    <!-- Lead 3: Chưa duyệt (Để test quy trình Admin) -->
+    <record id="test_lead_services_1" model="crm.lead">
+        <field name="name">Cần tư vấn Pháp lý mở chi nhánh</field>
+        <field name="type">opportunity</field>
+        <field name="lead_category" ref="website_lead_showcase.lead_category_services"/>
+        <field name="country_region">Singapore</field>
+        <field name="short_description">Tìm công ty luật hỗ trợ mở chi nhánh công ty tại Singapore.</field>
+        <field name="approval_status">draft</field>
+        <field name="website_visible">False</field>
+    </record>
+</odoo>

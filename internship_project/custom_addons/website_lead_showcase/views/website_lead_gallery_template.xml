@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="website_lead_gallery_template_inherit" inherit_id="website_lead_showcase.lead_detail">
+        <xpath expr="//t[@t-if='lead.lead_image']" position="replace">
+            <!-- Thư viện Slider Ảnh Sản Phẩm (Sắc nét, không bị bóp méo) -->
+            <t t-if="lead.gallery_image_ids">
+                <div t-attf-id="carouselLead#{lead.id}" class="carousel slide mb-4 bg-white rounded shadow-sm border p-2" data-bs-ride="carousel">
+                    <div class="carousel-inner text-center" style="min-height: 350px; background: #f8f9fa;">
+                        <t t-foreach="lead.gallery_image_ids" t-as="img">
+                            <div t-attf-class="carousel-item #{'active' if img_index == 0 else ''}" style="height: 400px;">
+                                <img t-attf-src="/web/image/lead.gallery.image/#{img.id}/image" class="d-block mx-auto h-100 w-auto" style="object-fit: contain; max-width: 100%;" alt="Ảnh sản phẩm"/>
+                            </div>
+                        </t>
+                    </div>
+                    <t t-if="len(lead.gallery_image_ids) > 1">
+                        <button class="carousel-control-prev bg-dark rounded-circle m-auto" style="width: 40px; height: 40px; opacity: 0.7;" type="button" t-attf-data-bs-target="#carouselLead#{lead.id}" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        </button>
+                        <button class="carousel-control-next bg-dark rounded-circle m-auto" style="width: 40px; height: 40px; opacity: 0.7;" type="button" t-attf-data-bs-target="#carouselLead#{lead.id}" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        </button>
+                    </t>
+                </div>
+            </t>
+            <!-- Fallback hiển thị Ảnh đại diện (Avatar) cân đối, không vỡ nét -->
+            <t t-elif="lead.lead_image">
+                <div class="bg-white rounded shadow-sm border p-2 mb-4 text-center" style="background: #f8f9fa;">
+                    <img t-attf-src="data:image/jpeg;base64,#{lead.lead_image}" class="img-fluid rounded mx-auto" style="max-height: 400px; object-fit: contain;" alt="Avatar"/>
+                </div>
+            </t>
+            <!-- Khung trống mặc định -->
+            <t t-else="">
+                <div class="bg-light text-center p-5 rounded border mb-4 text-muted">
+                    <i class="fa fa-image fa-3x mb-2"></i>
+                    <p class="mb-0">Chưa có hình ảnh minh họa</p>
+                </div>
+            </t>
+        </xpath>
+    </template>
+</odoo>
