@@ -236,41 +236,74 @@
                         <!-- Lead Info -->
                         <h1 class="mb-3"><t t-esc="lead.name"/></h1>
                         
-                        <!-- Meta Info -->
-                        <div class="row text-muted mb-4">
-                            <div class="col-md-6">
-                                <p>
-                                    <i class="fa fa-map-marker"></i>
-                                    <strong>Location:</strong>
-                                    <t t-esc="lead.country_region"/>
-                                </p>
-                            </div>
-                            <div class="col-md-6">
-                                <p>
-                                    <i class="fa fa-calendar"></i>
-                                    <strong>Posted:</strong>
-                                    <t t-if="lead.website_published_date">
-                                        <t t-esc="lead.website_published_date.strftime('%d/%m/%Y')"/>
-                                    </t>
-                                </p>
+                        <!-- Business Profile Info -->
+                        <div class="card bg-white shadow-sm border border-light mb-4 rounded-3">
+                            <div class="card-body">
+                                <h5 class="card-title text-primary mb-3 border-bottom pb-2">
+                                    <i class="fa fa-info-circle"></i> Thông tin doanh nghiệp
+                                </h5>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-light rounded-circle p-2 me-3 text-center" style="width: 40px; height: 40px;">
+                                                <i class="fa fa-building text-secondary"></i>
+                                            </div>
+                                            <div>
+                                                <small class="text-muted d-block" style="font-size: 0.8rem;">Tên tổ chức</small>
+                                                <strong><t t-esc="lead.partner_name or lead.contact_name or 'Đang cập nhật'"/></strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-light rounded-circle p-2 me-3 text-center" style="width: 40px; height: 40px;">
+                                                <i class="fa fa-map-marker text-danger"></i>
+                                            </div>
+                                            <div>
+                                                <small class="text-muted d-block" style="font-size: 0.8rem;">Quốc gia / Khu vực</small>
+                                                <strong><t t-esc="lead.country_region or lead.city or 'Đang cập nhật'"/></strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-light rounded-circle p-2 me-3 text-center" style="width: 40px; height: 40px;">
+                                                <i class="fa fa-calendar text-info"></i>
+                                            </div>
+                                            <div>
+                                                <small class="text-muted d-block" style="font-size: 0.8rem;">Ngày đăng tải</small>
+                                                <strong>
+                                                    <t t-if="lead.website_published_date">
+                                                        <t t-esc="lead.website_published_date.strftime('%d/%m/%Y')"/>
+                                                    </t>
+                                                    <t t-else="">N/A</t>
+                                                </strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-light rounded-circle p-2 me-3 text-center" style="width: 40px; height: 40px;">
+                                                <i class="fa fa-bullseye text-success"></i>
+                                            </div>
+                                            <div>
+                                                <small class="text-muted d-block" style="font-size: 0.8rem;">Nhu cầu</small>
+                                                <t t-if="lead.lead_intent">
+                                                    <span t-attf-class="badge {{ 'bg-danger' if lead.lead_intent == 'buy' else 'bg-success' if lead.lead_intent == 'sell' else 'bg-info' }}">
+                                                        <t t-esc="dict(lead.fields_get(['lead_intent'])['lead_intent']['selection'])[lead.lead_intent]"/>
+                                                    </span>
+                                                </t>
+                                                <t t-if="lead.lead_category">
+                                                    <span class="badge bg-secondary ms-1">
+                                                        <t t-esc="lead.lead_category.name"/>
+                                                    </span>
+                                                </t>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        
-                        <!-- Category -->
-                        
-                                        <t t-if="lead.lead_intent">
-                                            <span t-attf-class="badge mb-2 {{ 'bg-danger' if lead.lead_intent == 'buy' else 'bg-success' if lead.lead_intent == 'sell' else 'bg-info' }}">
-                                                <t t-esc="dict(lead.fields_get(['lead_intent'])['lead_intent']['selection'])[lead.lead_intent]"/>
-                                            </span>
-                                        </t>
-    
-                                        <t t-if="lead.lead_category">
-                            <p class="mb-4">
-                                <span class="badge bg-primary p-2">
-                                    <t t-esc="lead.lead_category.name"/>
-                                </span>
-                            </p>
-                        </t>
                         
                         <!-- Full Description -->
                         <div class="mb-5">
