@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_mm_lead,mm.lead,model_mm_lead,base.group_user,1,1,1,1
+access_match_recommendation_wizard,match.recommendation.wizard,model_match_recommendation_wizard,base.group_user,1,1,1,1
+access_match_recommendation_line,match.recommendation.line,model_match_recommendation_line,base.group_user,1,1,1,1

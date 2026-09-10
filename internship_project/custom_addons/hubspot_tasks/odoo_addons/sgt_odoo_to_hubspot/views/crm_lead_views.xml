@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_crm_lead_form_hubspot_sync" model="ir.ui.view">
+        <field name="name">crm.lead.form.hubspot.sync</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+        <field name="arch" type="xml">
+            <!-- Thêm nút Retry trên Header -->
+            <xpath expr="//header" position="inside">
+                <button name="action_sync_to_hubspot" 
+                        string="Retry HubSpot Sync" 
+                        type="object" 
+                        class="btn-secondary"
+                        invisible="x_hubspot_sync_status == 'success'"/>
+            </xpath>
+            
+            <!-- Thêm tab theo dõi trạng thái HubSpot -->
+            <xpath expr="//notebook" position="inside">
+                <page string="HubSpot Sync" name="hubspot_sync_page">
+                    <group>
+                        <group>
+                            <field name="x_hubspot_sync_status" widget="badge" 
+                                   decoration-success="x_hubspot_sync_status == 'success'" 
+                                   decoration-danger="x_hubspot_sync_status == 'failed'" 
+                                   decoration-info="x_hubspot_sync_status == 'pending'"/>
+                            <field name="x_hubspot_deal_id"/>
+                        </group>
+                        <group>
+                            <field name="x_hubspot_sync_date"/>
+                            <field name="x_hubspot_sync_error" invisible="x_hubspot_sync_status != 'failed'"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

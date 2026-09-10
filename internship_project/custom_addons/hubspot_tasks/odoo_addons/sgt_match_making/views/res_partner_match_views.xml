@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_match_recommendation_wizard" model="ir.ui.view">
+        <field name="name">match.recommendation.wizard.form</field>
+        <field name="model">match.recommendation.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Đề Xuất Đối Tác Tiềm Năng">
+                <sheet>
+                    <div class="mb-3">
+                        <label for="partner_id" class="fw-bold"/>
+                        <h2><field name="partner_id" readonly="1" options="{'no_open': True}"/></h2>
+                    </div>
+                    <field name="line_ids">
+                        <list create="false" delete="false">
+                            <field name="target_partner_id"/>
+                            <field name="country_id"/>
+                            <field name="score" widget="badge" decoration-success="score >= 40" decoration-info="score &lt; 40"/>
+                            <field name="reason"/>
+                            <button name="action_create_match" string="Kết Nối Ngay" type="object" class="btn btn-sm btn-primary"/>
+                        </list>
+                    </field>
+                </sheet>
+                <footer>
+                    <button string="Đóng" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_match_recommendation" model="ir.actions.act_window">
+        <field name="name">Tìm đối tác phù hợp</field>
+        <field name="res_model">match.recommendation.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="base.model_res_partner"/>
+        <field name="binding_view_types">form</field>
+    </record>
+</odoo>
