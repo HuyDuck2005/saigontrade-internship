@@ -5,7 +5,7 @@ class LeadApprovalHistory(models.Model):
     _description = 'Lịch sử duyệt Lead'
     _order = 'create_date desc'
     
-    lead_id = fields.Many2one('crm.lead', string="Lead", required=True)
+    lead_id = fields.Many2one('crm.lead', string="Lead", required=True, ondelete='cascade')
     action = fields.Selection([
         ('submitted', 'Submit'),
         ('approved', 'Phê duyệt'),

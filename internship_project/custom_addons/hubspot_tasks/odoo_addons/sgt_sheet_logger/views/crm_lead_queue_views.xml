@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Server Action: Sync Sheet Queue -->
+    <record id="action_sync_sheet_queue_now" model="ir.actions.server">
+        <field name="name">Đồng Bộ Sheet Queue</field>
+        <field name="model_id" ref="crm.model_crm_lead"/>
+        <field name="binding_model_id" ref="crm.model_crm_lead"/>
+        <field name="binding_view_types">list,form</field>
+        <field name="state">code</field>
+        <field name="code">action = model.action_sync_from_google_sheet_queue()</field>
+    </record>
+
+    <!-- Server Action: Đối soát Sheet vs Odoo (Task 15) -->
+    <record id="action_run_reconciliation" model="ir.actions.server">
+        <field name="name">Đối Soát Odoo - Sheet</field>
+        <field name="model_id" ref="crm.model_crm_lead"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_run_reconciliation_now()</field>
+    </record>
+
+    <!-- Server Action: Đồng bộ 2 chiều HubSpot (Task 16/18) -->
+    <record id="action_run_hubspot_sync" model="ir.actions.server">
+        <field name="name">Đồng Bộ 2 Chiều HubSpot</field>
+        <field name="model_id" ref="crm.model_crm_lead"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_run_hubspot_bidirectional_sync()</field>
+    </record>
+
+    <!-- MENU TỔNG HỢP: TRUNG TÂM TÍCH HỢP TRÊN THANH CRM -->
+    <menuitem id="menu_integration_center_root"
+              name="Trung Tâm Tích Hợp"
+              parent="crm.crm_menu_root"
+              sequence="20"/>
+
+    <menuitem id="menu_sub_sync_queue"
+              name="1. Import Sheet Queue -> Odoo"
+              parent="menu_integration_center_root"
+              action="action_sync_sheet_queue_now"
+              sequence="1"/>
+
+    <menuitem id="menu_sub_hubspot_sync"
+              name="2. Đồng Bộ HubSpot (2 Chiều)"
+              parent="menu_integration_center_root"
+              action="action_run_hubspot_sync"
+              sequence="2"/>
+
+    <menuitem id="menu_sub_reconcile"
+              name="3. Chạy Đối Soát Dữ Liệu (Task 15)"
+              parent="menu_integration_center_root"
+              action="action_run_reconciliation"
+              sequence="3"/>
+
+    <!-- ========================================================================= -->
+    <!-- 3. TỰ ĐỘNG HÓA DOANH NGHIỆP: SCHEDULED ACTION (CRON JOB TỰ ĐỘNG CHẠY NGẦM) -->
+    <!-- ========================================================================= -->
+    <record id="ir_cron_auto_sync_sheet_queue" model="ir.cron">
+        <field name="name">Tự Động Quét Sheet Queue (15 phút/lần)</field>
+        <field name="model_id" ref="crm.model_crm_lead"/>
+        <field name="state">code</field>
+        <field name="code">model.action_sync_from_google_sheet_queue()</field>
+        <field name="interval_number">15</field>
+        <field name="interval_type">minutes</field>
+        
+        
+        <field name="active" eval="True"/>
+    </record>
+
+    <record id="ir_cron_auto_bidirectional_hubspot" model="ir.cron">
+        <field name="name">Tự Động Đồng Bộ HubSpot (1 giờ/lần)</field>
+        <field name="model_id" ref="crm.model_crm_lead"/>
+        <field name="state">code</field>
+        <field name="code">model.action_run_hubspot_bidirectional_sync()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">hours</field>
+        
+        
+        <field name="active" eval="True"/>
+    </record>
+
+    <!-- Server Action: Auto Fix Task 15 -->
+    <record id="action_run_autofix_recon" model="ir.actions.server">
+        <field name="name">Auto-Fix Sai Lệch Odoo - Sheet</field>
+        <field name="model_id" ref="crm.model_crm_lead"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_auto_fix_reconciliation()</field>
+    </record>
+
+    <menuitem id="menu_sub_autofix"
+              name="4. Tự Động Sửa Lệch Dữ Liệu (Auto-Fix)"
+              parent="menu_integration_center_root"
+              action="action_run_autofix_recon"
+              sequence="4"/>
+
+</odoo>

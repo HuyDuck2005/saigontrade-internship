@@ -1,45 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
-<odoo noupdate="1">
-    <!-- Lead 1: Đã duyệt (Hiện trên Website) -->
-    <record id="test_lead_tech_1" model="crm.lead">
-        <field name="name">Tìm đối tác phát triển phần mềm ERP</field>
+<odoo noupdate="0">
+    <record id="test_lead_cafe_export" model="crm.lead">
+        <field name="name">Nguồn cung Cà phê Robusta Honey xuất khẩu Châu Âu</field>
+        <field name="partner_name">Công ty Cổ phần Nông sản Cao nguyên Đắk Lắk</field>
         <field name="type">opportunity</field>
-        <field name="lead_category" ref="website_lead_showcase.lead_category_technology"/>
-        <field name="country_region">Việt Nam</field>
-        <field name="short_description">Cần tìm đội ngũ lập trình có kinh nghiệm triển khai ERP cho ngành bán lẻ.</field>
-        <field name="description">Chúng tôi đang mở rộng chuỗi cửa hàng bán lẻ và cần xây dựng một hệ thống ERP nội bộ. Yêu cầu công nghệ hiện đại, có khả năng mở rộng.</field>
-        <field name="contact_person">Nguyễn Văn A</field>
-        <field name="contact_email">nguyenvana@example.com</field>
-        <field name="approval_status">approved</field>
-        <field name="website_visible">True</field>
-        <field name="website_published_date" eval="time.strftime('%Y-%m-%d %H:%M:%S')"/>
-        <field name="lead_image">iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==</field>
-    </record>
-
-    <!-- Lead 2: Đã duyệt (Hiện trên Website) -->
-    <record id="test_lead_export_1" model="crm.lead">
-        <field name="name">Nguồn cung Nông sản xuất khẩu Nhật Bản</field>
-        <field name="type">opportunity</field>
+        <field name="lead_intent">sell</field>
         <field name="lead_category" ref="website_lead_showcase.lead_category_import_export"/>
-        <field name="country_region">Nhật Bản</field>
-        <field name="short_description">Tìm nguồn cung cấp hạt điều, cà phê chất lượng cao xuất sang thị trường Nhật.</field>
-        <field name="description">Doanh nghiệp chúng tôi tại Tokyo đang tìm kiếm các nhà cung cấp nông sản uy tín tại Việt Nam để hợp tác dài hạn.</field>
-        <field name="contact_person">Trần Thị B</field>
-        <field name="contact_email">tranthib_jp@example.com</field>
+        <field name="country_region">Đắk Lắk, Việt Nam</field>
+        <field name="short_description">Cung cấp hạt cà phê Robusta sơ chế Honey, độ ẩm dưới 12.5%, sàn 18, đạt chuẩn chứng nhận Rainforest &amp; UTZ sang thị trường EU.</field>
+        <field name="description">Doanh nghiệp chúng tôi sở hữu vùng trồng hơn 350ha tại Cư M'gar - Đắk Lắk. Sản lượng ổn định 1.500 tấn/năm. Đầy đủ chứng thư hun trùng, kiểm định chất lượng quốc tế.</field>
+        <field name="contact_person">Nguyễn Văn Cường</field>
+        <field name="contact_email">cuong.export@daklakcoffee.vn</field>
+        <field name="contact_phone">0918234567</field>
         <field name="approval_status">approved</field>
         <field name="website_visible">True</field>
         <field name="website_published_date" eval="time.strftime('%Y-%m-%d %H:%M:%S')"/>
-        <field name="lead_image">iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==</field>
+        <field name="website_view_count">428</field>
+        <field name="lead_image" type="base64" file="website_lead_showcase/static/src/img/demo/cafe.png"/>
     </record>
 
-    <!-- Lead 3: Chưa duyệt (Để test quy trình Admin) -->
-    <record id="test_lead_services_1" model="crm.lead">
-        <field name="name">Cần tư vấn Pháp lý mở chi nhánh</field>
+    <record id="test_lead_seafood_export" model="crm.lead">
+        <field name="name">Tìm đối tác phân phối Tôm thẻ chân trắng đông lạnh (IQF)</field>
+        <field name="partner_name">Tập đoàn Thủy sản Miền Tây - Chi nhánh Sài Gòn</field>
         <field name="type">opportunity</field>
-        <field name="lead_category" ref="website_lead_showcase.lead_category_services"/>
-        <field name="country_region">Singapore</field>
-        <field name="short_description">Tìm công ty luật hỗ trợ mở chi nhánh công ty tại Singapore.</field>
-        <field name="approval_status">draft</field>
-        <field name="website_visible">False</field>
+        <field name="lead_intent">sell</field>
+        <field name="lead_category" ref="website_lead_showcase.lead_category_manufacturing"/>
+        <field name="country_region">Cà Mau, Việt Nam</field>
+        <field name="short_description">Cung ứng tôm sú, tôm thẻ chân trắng bỏ đầu còn đuôi (PTO), cấp đông rời IQF tiêu chuẩn HACCP, ASC cho chuỗi siêu thị.</field>
+        <field name="description">Nhà máy chế biến công suất 45 tấn/ngày tại Cà Mau. Đang tìm kiếm đối tác thu mua dài hạn hoặc nhà nhập khẩu tại Bắc Mỹ, Nhật Bản và Hàn Quốc.</field>
+        <field name="contact_person">Lê Thị Thanh Trúc</field>
+        <field name="contact_email">truc.le@mientayseafood.com</field>
+        <field name="contact_phone">0903889922</field>
+        <field name="approval_status">approved</field>
+        <field name="website_visible">True</field>
+        <field name="website_published_date" eval="time.strftime('%Y-%m-%d %H:%M:%S')"/>
+        <field name="website_view_count">315</field>
+        <field name="lead_image" type="base64" file="website_lead_showcase/static/src/img/demo/seafood.png"/>
+    </record>
+
+    <record id="test_lead_garment_oem" model="crm.lead">
+        <field name="name">Cần tìm xưởng gia công Áo Polo &amp; T-Shirt xuất khẩu Nhật Bản</field>
+        <field name="partner_name">Hãng Thời Trang Global Supply Chain VN</field>
+        <field name="type">opportunity</field>
+        <field name="lead_intent">buy</field>
+        <field name="lead_category" ref="website_lead_showcase.lead_category_manufacturing"/>
+        <field name="country_region">TP. Hồ Chí Minh</field>
+        <field name="short_description">Đơn hàng OEM 50.000 sản phẩm/tháng. Yêu cầu xưởng may có chứng nhận BSCI hoặc WRAP, đường kim mũi chỉ tỉ mỉ.</field>
+        <field name="description">Đại diện thương hiệu may mặc tại Tokyo tìm xưởng may tại khu vực TP.HCM, Bình Dương, Đồng Nai. Thanh toán L/C nhanh chóng.</field>
+        <field name="contact_person">Trần Quang Huy</field>
+        <field name="contact_email">huy.tran@globalsupply.vn</field>
+        <field name="contact_phone">0934112233</field>
+        <field name="approval_status">approved</field>
+        <field name="website_visible">True</field>
+        <field name="website_published_date" eval="time.strftime('%Y-%m-%d %H:%M:%S')"/>
+        <field name="website_view_count">680</field>
+        <field name="lead_image" type="base64" file="website_lead_showcase/static/src/img/demo/garment.png"/>
     </record>
 </odoo>

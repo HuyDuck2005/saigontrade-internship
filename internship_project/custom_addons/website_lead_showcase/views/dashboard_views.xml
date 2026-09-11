@@ -13,7 +13,7 @@
         <field name="search_view_id" ref="crm_lead_search_view_website"/>
     </record>
 
-    <!-- Top-level Menu để dễ nhìn thấy trên giao diện -->
+    <!-- Top-level Menu -->
     <menuitem id="menu_lead_website_root" 
               name="Website Leads" 
               sequence="20"/>
@@ -23,5 +23,53 @@
               parent="menu_lead_website_root" 
               action="action_crm_lead_website_showcase"
               sequence="10"/>
+
+    <!-- Kanban View hỗ trợ cả t-name='card' cho Owl Odoo 17.4+ / 18 / 19 -->
+    <record id="lead_approval_dashboard" model="ir.ui.view">
+        <field name="name">Lead Approval Dashboard</field>
+        <field name="model">crm.lead</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile">
+                <field name="id"/>
+                <field name="name"/>
+                <field name="approval_status"/>
+                <field name="lead_image"/>
+                <field name="short_description"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_card d-flex flex-column gap-2 p-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <t t-if="record.lead_image.raw_value">
+                                    <img t-att-src="'/web/image/crm.lead/' + record.id.raw_value + '/lead_image'" 
+                                         alt="Lead" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px;"/>
+                                </t>
+                                <div>
+                                    <strong class="d-block text-truncate"><field name="name"/></strong>
+                                    <field name="approval_status" widget="badge"/>
+                                </div>
+                            </div>
+                            <div class="text-muted small text-truncate">
+                                <field name="short_description"/>
+                            </div>
+                            <div class="d-flex gap-1 mt-auto pt-2 border-top">
+                                <button name="action_approve" 
+                                        type="object" 
+                                        class="btn btn-sm btn-success py-0 px-2"
+                                        invisible="approval_status == 'approved'">
+                                    ✓ Duyệt
+                                </button>
+                                <button name="action_reject" 
+                                        type="object" 
+                                        class="btn btn-sm btn-danger py-0 px-2"
+                                        invisible="approval_status == 'rejected'">
+                                    ✗ Từ chối
+                                </button>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
     
 </odoo>

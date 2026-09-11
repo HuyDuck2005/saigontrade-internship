@@ -1,0 +1,46 @@
+03/09/2026 - Vũ Huy Đức,Phạm Quốc Lân 
+Đã làm:
+Task Mapping Odoo 1 - Odoo 2
+Hoàn thành mapping dữ liệu giữa Odoo 1 và Odoo 2.
+Asterisk + FreePBX
+Cấu hình trên VPS, setup FreePBX UI và tạo Extension Softphone.
+Đang làm:
+Tìm hiểu nguyên lý Asterisk/FreePBX, Extension, RTP Port và UFW Rules.
+Chuẩn bị Bước 2: cài đặt và cấu hình Asterisk/FreePBX trên VPS.
+BÁO CÁO CÔNG VIỆC (Ngày 27/08/2026)
+Nhân sự: Vũ Huy Đức,Phạm Quốc Lân
+
+Đã hoàn thành:
+
+Tính năng Mapping: Tạo UI (Create/Update/Delete) cho fields Mapping; hoàn tất đồng bộ các field mới thêm trong Lead từ Odoo 1 sang Odoo 2.
+
+Module Intern Work:
+
+Sửa triệt để các lỗi hệ thống (500, RPC, OwlError).
+
+Tối ưu UX (form đánh giá trực tiếp trên báo cáo).
+
+Hoàn thiện bảo mật (phân quyền Record Rules, khóa Read-only chống sửa lén).
+
+Tích hợp thành công Chatter (nhắc việc, tag tên, lịch sử thay đổi).
+
+⏳ Đang thực hiện:
+
+Task 8: Xây dựng API Middleware trung gian để nhận dữ liệu khách hàng và tự động tạo Deal trong Odoo CRM.
+
+Hạ tầng: Tiến hành dựng tổng đài FreePBX/Asterisk trên một máy ảo (VM) riêng biệt.
+Vũ Huy Đức
+Phạm Quốc Lân
+26/08/2026
+Đã làm:
+- Hoàn thành Mapping custom field Odoo1 → Odoo2.
+- Sync các fields khi có sự kiện thay đổi dữ liệu.
+- UI Mapping cho các field muốn thay đổi.
+Đang làm:
+- Mở rộng việc Mapping bằng các module có sẵn trong Apps và kết nối các module có sẵn để thực hiện Mapping.
+- Nghiên cứu VoIP, record iphone.
+Họ tên: Vũ Huy Đức
+Ngày báo cáo: 25/08/2026
+
+- Đã hoàn thành: Triển khai từ Task 1 đến Task 10 (khung dự án, API, Google Sheet, đồng bộ Contacts/Deals, chống trùng lặp, nhật ký kiểm toán) và chạy thử nghiệm thực tế liên thông giữa Google Sheets, Middleware, HubSpot, Odoo.
+-Đang xử lý: Khắc phục điểm nghẽn đồng bộ hai chiều từ ý kiến đánh giá, tối ưu hệ thống để chuẩn bị nghiệm thu chính thức.

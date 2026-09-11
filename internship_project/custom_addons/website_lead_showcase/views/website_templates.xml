@@ -1,491 +1,563 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
     
-    <!-- Leads List Template -->
-    <template id="leads_list" name="Leads List">
+    <!-- Trang Danh Sách Cơ Hội Giao Thương -->
+    <template id="leads_list" name="SaiGonTrade Leads Portal">
         <t t-call="website.layout">
-            <div class="container my-5">
-                
-                <!-- Header -->
-                <div class="row mb-5">
-                    <div class="col-lg-8">
-                        <h1 class="display-4">Business Opportunities</h1>
-                        <p class="lead">Discover the latest leads and opportunities</p>
-                    </div>
-                </div>
-                
-                <!-- Filters -->
-                <div class="row mb-4">
-                    <div class="col-lg-12">
-                        <form method="get" class="row g-3">
-                            
-                            <!-- Search -->
-                            <div class="col-md-4">
-                                <input type="text" 
-                                       name="search" 
-                                       class="form-control" 
-                                       placeholder="Search leads..."
-                                       t-att-value="search_query"/>
+            <div class="sg-page-wrapper py-4 py-md-5">
+                <div class="container">
+                    
+                    <!-- Hero Banner -->
+                    <div class="sg-hero-banner mb-4">
+                        <div class="row align-items-center">
+                            <div class="col-lg-8">
+                                <div class="d-flex align-items-center gap-2 gap-md-3 mb-3">
+                                    <img src="/website_lead_showcase/static/src/img/logo.png" 
+                                         alt="SaiGonTrade Logo" 
+                                         class="sg-logo-badge"
+                                         onerror="this.style.display='none'"/>
+                                    <span class="badge bg-light text-danger fw-bold text-uppercase px-3 py-2 rounded-pill shadow-sm">
+                                        Cổng Xúc Tiến Thương Mại
+                                    </span>
+                                </div>
+                                <h1 class="display-6 fw-bold mb-2">Cơ Hội Giao Thương &amp; Xuất Nhập Khẩu</h1>
+                                <p class="lead mb-3 text-white-50 fs-6 fs-md-5">
+                                    Kết nối trực tiếp nguồn cung uy tín, mở rộng thị trường xuất khẩu và hợp tác đầu tư cùng SaiGonTrade.
+                                </p>
+                                <a href="/leads/submit" class="btn btn-light text-danger fw-bold rounded-pill px-4 py-2 shadow-sm">
+                                    <i class="fa fa-plus-circle me-1"></i> Đăng Tin Giao Thương Miễn Phí
+                                </a>
                             </div>
-                            
-                            <!-- Category Filter -->
-                            
-                            <div class="col-md-2">
-                                <select name="intent" class="form-select">
+                            <div class="col-lg-4 text-center text-lg-end mt-4 mt-lg-0">
+                                <div class="d-inline-block text-start bg-white p-3 p-md-4 rounded-4 shadow-sm text-dark">
+                                    <div class="small text-muted mb-1"><i class="fa fa-line-chart text-danger"></i> Dữ liệu xúc tiến</div>
+                                    <div class="h4 fw-bold mb-0 text-danger"><t t-esc="total"/>+ <span class="h6 text-muted fw-normal">cơ hội đang mở</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Thanh Marquee Đối Tác Nổi Bật -->
+                    <t t-if="featured_leads">
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center justify-content-between mb-2 px-1">
+                                <div>
+                                    <span class="badge badge-sg-red me-2"><i class="fa fa-bolt"></i> TIÊU BIỂU</span>
+                                    <small class="text-muted fw-semibold">Đối tác &amp; Cơ hội nổi bật</small>
+                                </div>
+                                <small class="text-muted d-none d-md-inline"><i class="fa fa-hand-o-right"></i> Rê chuột để dừng</small>
+                            </div>
+                            <div class="sg-marquee-container">
+                                <div class="sg-marquee-track">
+                                    <t t-foreach="featured_leads + featured_leads" t-as="item">
+                                        <a t-attf-href="/leads/#{item.id}" class="sg-marquee-item">
+                                            <i class="fa fa-check-circle text-danger me-2"></i>
+                                            <strong class="me-1"><t t-esc="item.partner_name or item.name"/></strong>
+                                            <span class="text-muted small ms-1">(<t t-esc="item.country_region or 'Việt Nam'"/>)</span>
+                                        </a>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+
+                    <!-- Bộ Lọc Nâng Cao -->
+                    <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white lead-search-filter-card">
+                        <form method="get" class="row g-2 align-items-center">
+                            <div class="col-lg-3 col-md-6 col-12">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-0 text-muted"><i class="fa fa-search"></i></span>
+                                    <input type="text" name="search" class="form-control bg-light border-0" 
+                                           placeholder="Tìm sản phẩm, doanh nghiệp..." 
+                                           t-att-value="search_query"/>
+                                </div>
+                            </div>
+                            <div class="col-lg-2 col-md-3 col-6">
+                                <select name="intent" class="form-select border-0 bg-light">
                                     <option value="">Tất cả nhu cầu</option>
                                     <option value="buy" t-att-selected="selected_intent == 'buy'">TÌM MUA</option>
                                     <option value="sell" t-att-selected="selected_intent == 'sell'">CHÀO BÁN</option>
                                 </select>
                             </div>
-
-                                <div class="col-md-3">
-                                <select name="category_id" class="form-select">
-                                    <option value="">All Categories</option>
+                            <div class="col-lg-3 col-md-3 col-6">
+                                <select name="category_id" class="form-select border-0 bg-light">
+                                    <option value="">Tất cả lĩnh vực</option>
                                     <t t-foreach="categories" t-as="cat">
-                                        <option t-att-value="cat.id"
-                                                t-att-selected="str(cat.id) == str(selected_category)">
+                                        <option t-att-value="cat.id" t-att-selected="str(cat.id) == str(selected_category)">
                                             <t t-esc="cat.name"/>
                                         </option>
                                     </t>
                                 </select>
                             </div>
-                            
-                            <!-- Country Filter -->
-                            <div class="col-md-3">
-                                <select name="country" class="form-select">
-                                    <option value="">All Countries</option>
-                                    <t t-foreach="countries" t-as="country_opt">
-                                        <option t-att-value="country_opt"
-                                                t-att-selected="country_opt == selected_country">
-                                            <t t-esc="country_opt"/>
+                            <div class="col-lg-2 col-md-6 col-6">
+                                <select name="country" class="form-select border-0 bg-light">
+                                    <option value="">Tất cả khu vực</option>
+                                    <t t-foreach="countries" t-as="c">
+                                        <option t-att-value="c" t-att-selected="c == selected_country">
+                                            <t t-esc="c"/>
                                         </option>
                                     </t>
                                 </select>
                             </div>
-                            
-                            <!-- Search Button -->
-                            <div class="col-md-2">
-                                <button type="submit" class="btn btn-primary w-100">
-                                    Search
+                            <div class="col-lg-2 col-md-6 col-6 d-flex gap-2">
+                                <button type="submit" class="btn btn-sg-primary flex-grow-1">
+                                    Lọc Tin
                                 </button>
+                                <a href="/leads" class="btn btn-light" title="Xóa bộ lọc"><i class="fa fa-refresh"></i></a>
                             </div>
-                            
                         </form>
                     </div>
-                </div>
-                
-                <!-- Leads Grid -->
-                <div class="row">
-                    <t t-if="leads">
-                        <t t-foreach="leads" t-as="lead">
-                            <div class="col-lg-4 col-md-6 mb-4">
-                                <div class="card h-100 lead-card shadow-sm">
-                                    
-                                    <!-- Lead Image -->
-                                    <div class="lead-image-container">
-                                        <t t-if="lead.lead_image">
-                                            <img t-attf-src="/web/image/crm.lead/{{ lead.id }}/lead_image" 
-                                                 class="card-img-top" 
-                                                 alt="Lead"/>
-                                        </t>
-                                        <t t-else="">
-                                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center"
-                                                 style="height: 250px;">
-                                                <i class="fa fa-image fa-3x text-muted"></i>
-                                            </div>
-                                        </t>
-                                    </div>
-                                    
-                                    <!-- Card Body -->
-                                    <div class="card-body">
-                                        
-                                        <!-- Category Badge -->
-                                        
-                                        <t t-if="lead.lead_intent">
-                                            <span t-attf-class="badge mb-2 {{ 'bg-danger' if lead.lead_intent == 'buy' else 'bg-success' if lead.lead_intent == 'sell' else 'bg-info' }}">
-                                                <t t-esc="dict(lead.fields_get(['lead_intent'])['lead_intent']['selection'])[lead.lead_intent]"/>
-                                            </span>
-                                        </t>
-    
-                                        <t t-if="lead.lead_category">
-                                            <span class="badge bg-secondary mb-2">
-                                                <t t-esc="lead.lead_category.name"/>
-                                            </span>
-                                        </t>
-                                        
-                                        <!-- Lead Title -->
-                                        <h5 class="card-title">
-                                            <t t-esc="lead.name"/>
-                                        </h5>
-                                        
-                                        <!-- Country/Region -->
-                                        <p class="text-muted small">
-                                            <i class="fa fa-map-marker"></i>
-                                            <t t-esc="lead.country_region"/>
-                                        </p>
-                                        
-                                        <!-- Description -->
-                                        <p class="card-text text-truncate" 
-                                           t-att-title="lead.short_description">
-                                            <t t-esc="lead.short_description"/>
-                                        </p>
-                                        
-                                        <!-- Published Date -->
-                                        <p class="text-muted small">
-                                            <i class="fa fa-calendar"></i>
-                                            Posted: 
-                                            <t t-if="lead.website_published_date">
-                                                <t t-esc="lead.website_published_date.strftime('%d/%m/%Y')"/>
+
+                    <!-- Lưới Thẻ Cơ Hội -->
+                    <div class="row g-3 g-md-4">
+                        <t t-if="leads">
+                            <t t-foreach="leads" t-as="lead">
+                                <div class="col-lg-4 col-md-6 col-12">
+                                    <div class="card h-100 lead-card shadow-sm border-0 position-relative">
+                                        <div class="lead-image-container">
+                                            <t t-if="lead.lead_image">
+                                                <img t-attf-src="/web/image/crm.lead/#{lead.id}/lead_image" 
+                                                     alt="Lead Thumbnail"/>
                                             </t>
-                                        </p>
-                                        
-                                        <!-- View Count -->
-                                        <p class="text-muted small">
-                                            <i class="fa fa-eye"></i>
-                                            <t t-esc="lead.website_view_count"/> views
-                                        </p>
-                                        
-                                    </div>
-                                    
-                                    <!-- Card Footer -->
-                                    <div class="card-footer bg-white">
-                                        <a t-attf-href="/leads/{{ lead.id }}" 
-                                           class="btn btn-primary btn-sm w-100">
-                                            View Details →
-                                        </a>
-                                    </div>
-                                    
-                                </div>
-                            </div>
-                        </t>
-                    </t>
-                    <t t-else="">
-                        <div class="col-12">
-                            <div class="alert alert-info text-center">
-                                <h4>No leads found</h4>
-                                <p>Try adjusting your search filters</p>
-                            </div>
-                        </div>
-                    </t>
-                </div>
-                
-                <!-- Pagination -->
-                <t t-if="total_pages &gt; 1">
-                    <nav class="mt-5">
-                        <ul class="pagination justify-content-center">
-                            
-                            <!-- Previous -->
-                            <li t-attf-class="page-item {{ 'disabled' if page == 1 else '' }}">
-                                <a class="page-link" 
-                                   t-attf-href="/leads?page={{ page - 1 }}">
-                                    Previous
-                                </a>
-                            </li>
-                            
-                            <!-- Page numbers -->
-                            <t t-foreach="range(1, total_pages + 1)" t-as="pg">
-                                <li t-attf-class="page-item {{ 'active' if pg == page else '' }}">
-                                    <a class="page-link" t-attf-href="/leads?page={{ pg }}">
-                                        <t t-esc="pg"/>
-                                    </a>
-                                </li>
-                            </t>
-                            
-                            <!-- Next -->
-                            <li t-attf-class="page-item {{ 'disabled' if page == total_pages else '' }}">
-                                <a class="page-link" 
-                                   t-attf-href="/leads?page={{ page + 1 }}">
-                                    Next
-                                </a>
-                            </li>
-                            
-                        </ul>
-                    </nav>
-                </t>
-                
-            </div>
-        </t>
-    </template>
-    
-    <!-- Lead Detail Template -->
-    <template id="lead_detail" name="Lead Detail">
-        <t t-call="website.layout">
-            <div class="container my-5">
-                
-                <!-- Back Link -->
-                <div class="mb-4">
-                    <a href="/leads" class="btn btn-outline-secondary">
-                        ← Back to Leads
-                    </a>
-                </div>
-                
-                <div class="row">
-                    
-                    <!-- Main Content -->
-                    <div class="col-lg-8">
-                        
-                        <!-- Lead Image -->
-                        <div class="mb-4">
-                            <t t-if="lead.lead_image">
-                                <img t-attf-src="/web/image/crm.lead/{{ lead.id }}/lead_image" 
-                                     class="img-fluid rounded" 
-                                     alt="Lead"/>
-                            </t>
-                        </div>
-                        
-                        <!-- Lead Info -->
-                        <h1 class="mb-3"><t t-esc="lead.name"/></h1>
-                        
-                        <!-- Business Profile Info -->
-                        <div class="card bg-white shadow-sm border border-light mb-4 rounded-3">
-                            <div class="card-body">
-                                <h5 class="card-title text-primary mb-3 border-bottom pb-2">
-                                    <i class="fa fa-info-circle"></i> Thông tin doanh nghiệp
-                                </h5>
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <div class="d-flex align-items-center">
-                                            <div class="bg-light rounded-circle p-2 me-3 text-center" style="width: 40px; height: 40px;">
-                                                <i class="fa fa-building text-secondary"></i>
-                                            </div>
-                                            <div>
-                                                <small class="text-muted d-block" style="font-size: 0.8rem;">Tên tổ chức</small>
-                                                <strong><t t-esc="lead.partner_name or lead.contact_name or 'Đang cập nhật'"/></strong>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="d-flex align-items-center">
-                                            <div class="bg-light rounded-circle p-2 me-3 text-center" style="width: 40px; height: 40px;">
-                                                <i class="fa fa-map-marker text-danger"></i>
-                                            </div>
-                                            <div>
-                                                <small class="text-muted d-block" style="font-size: 0.8rem;">Quốc gia / Khu vực</small>
-                                                <strong><t t-esc="lead.country_region or lead.city or 'Đang cập nhật'"/></strong>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="d-flex align-items-center">
-                                            <div class="bg-light rounded-circle p-2 me-3 text-center" style="width: 40px; height: 40px;">
-                                                <i class="fa fa-calendar text-info"></i>
-                                            </div>
-                                            <div>
-                                                <small class="text-muted d-block" style="font-size: 0.8rem;">Ngày đăng tải</small>
-                                                <strong>
-                                                    <t t-if="lead.website_published_date">
-                                                        <t t-esc="lead.website_published_date.strftime('%d/%m/%Y')"/>
-                                                    </t>
-                                                    <t t-else="">N/A</t>
-                                                </strong>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="d-flex align-items-center">
-                                            <div class="bg-light rounded-circle p-2 me-3 text-center" style="width: 40px; height: 40px;">
-                                                <i class="fa fa-bullseye text-success"></i>
-                                            </div>
-                                            <div>
-                                                <small class="text-muted d-block" style="font-size: 0.8rem;">Nhu cầu</small>
+                                            <t t-else="">
+                                                <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted bg-light">
+                                                    <i class="fa fa-building-o fa-3x text-black-50"></i>
+                                                </div>
+                                            </t>
+                                            <div class="position-absolute top-0 start-0 m-3 d-flex gap-1">
                                                 <t t-if="lead.lead_intent">
-                                                    <span t-attf-class="badge {{ 'bg-danger' if lead.lead_intent == 'buy' else 'bg-success' if lead.lead_intent == 'sell' else 'bg-info' }}">
+                                                    <span t-attf-class="badge #{ 'badge-sg-red' if lead.lead_intent == 'buy' else 'badge-sg-sell' }">
                                                         <t t-esc="dict(lead.fields_get(['lead_intent'])['lead_intent']['selection'])[lead.lead_intent]"/>
                                                     </span>
                                                 </t>
-                                                <t t-if="lead.lead_category">
-                                                    <span class="badge bg-secondary ms-1">
-                                                        <t t-esc="lead.lead_category.name"/>
+                                            </div>
+                                            <t t-if="lead.is_verified">
+                                                <div class="position-absolute top-0 end-0 m-3">
+                                                    <span class="badge bg-primary rounded-pill shadow-sm" title="Doanh nghiệp đã xác minh">
+                                                        <i class="fa fa-check-circle"></i> ĐÃ XÁC MINH
                                                     </span>
-                                                </t>
+                                                </div>
+                                            </t>
+                                        </div>
+                                        
+                                        <div class="card-body p-3 p-md-4 d-flex flex-column">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <span class="badge bg-light text-secondary border small">
+                                                    <t t-esc="lead.lead_category.name if lead.lead_category else 'Xúc tiến tổng hợp'"/>
+                                                </span>
+                                                <small class="text-muted"><i class="fa fa-map-marker text-danger"></i> <t t-esc="lead.country_region or 'N/A'"/></small>
+                                            </div>
+                                            
+                                            <h5 class="card-title fw-bold mb-2">
+                                                <a t-attf-href="/leads/#{lead.id}" class="text-dark text-decoration-none">
+                                                    <t t-esc="lead.name"/>
+                                                </a>
+                                            </h5>
+                                            
+                                            <p class="card-text text-muted small flex-grow-1" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                                                <t t-esc="lead.short_description or 'Chưa có tóm tắt chi tiết.'"/>
+                                            </p>
+
+                                            <div class="pt-3 border-top mt-3 d-flex align-items-center justify-content-between">
+                                                <small class="text-muted">
+                                                    <i class="fa fa-eye"></i> <t t-esc="lead.website_view_count"/> xem
+                                                </small>
+                                                <a t-attf-href="/leads/#{lead.id}" class="btn btn-outline-sg btn-sm px-3">
+                                                    Chi tiết →
+                                                </a>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+                            </t>
+                        </t>
+                        <t t-else="">
+                            <div class="col-12 text-center py-5">
+                                <div class="p-5 bg-white rounded-4 shadow-sm">
+                                    <i class="fa fa-search fa-3x text-danger mb-3"></i>
+                                    <h4>Không tìm thấy cơ hội giao thương phù hợp</h4>
+                                    <p class="text-muted">Hãy thử chọn lại danh mục hoặc tìm kiếm với từ khóa khác.</p>
+                                    <a href="/leads" class="btn btn-sg-primary mt-2">Xem tất cả cơ hội</a>
+                                </div>
                             </div>
-                        </div>
-                        
-                        <!-- Full Description -->
-                        <div class="mb-5">
-                            <h3>Description</h3>
-                            <div class="lead-full-description">
-                                <t t-esc="lead.description or lead.short_description"/>
-                            </div>
-                        </div>
-                        
-                        <!-- Related Leads -->
-                        <t t-if="related_leads">
-                            <div class="mb-5">
-                                <h3>Related Opportunities</h3>
-                                <div class="row">
-                                    <t t-foreach="related_leads" t-as="related">
-                                        <div class="col-md-6 mb-3">
-                                            <div class="card h-100">
-                                                <t t-if="related.lead_image">
-                                                    <img t-attf-src="/web/image/crm.lead/{{ related.id }}/lead_image"
-                                                         class="card-img-top"
-                                                         alt="Related Lead"
-                                                         style="height: 200px; object-fit: cover;"/>
-                                                </t>
-                                                <div class="card-body">
-                                                    <h6 class="card-title">
-                                                        <t t-esc="related.name"/>
-                                                    </h6>
-                                                    <p class="card-text small">
-                                                        <t t-esc="str(related.short_description)[:100]"/>...
-                                                    </p>
-                                                </div>
-                                                <div class="card-footer bg-white">
-                                                    <a t-attf-href="/leads/{{ related.id }}"
-                                                       class="btn btn-sm btn-primary">
-                                                        View
-                                                    </a>
-                                                </div>
+                        </t>
+                    </div>
+
+                    <!-- Phân trang -->
+                    <t t-if="total_pages &gt; 1">
+                        <nav class="mt-4 mt-md-5">
+                            <ul class="pagination justify-content-center flex-wrap">
+                                <li t-attf-class="page-item #{ 'disabled' if page == 1 else '' }">
+                                    <a class="page-link" t-attf-href="/leads?page=#{page - 1}">Trước</a>
+                                </li>
+                                <t t-foreach="range(1, total_pages + 1)" t-as="pg">
+                                    <li t-attf-class="page-item #{ 'active' if pg == page else '' }">
+                                        <a class="page-link" t-attf-href="/leads?page=#{pg}"><t t-esc="pg"/></a>
+                                    </li>
+                                </t>
+                                <li t-attf-class="page-item #{ 'disabled' if page == total_pages else '' }">
+                                    <a class="page-link" t-attf-href="/leads?page=#{page + 1}">Tiếp</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </t>
+
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- Trang Chi Tiết Cơ Hội & Tải Catalogue -->
+    <template id="lead_detail" name="SaiGonTrade Lead Detail">
+        <t t-call="website.layout">
+            <div class="sg-page-wrapper py-4 py-md-5">
+                <div class="container">
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <a href="/leads" class="btn btn-white bg-white border shadow-sm rounded-pill px-3 py-2 small">
+                            <i class="fa fa-arrow-left text-danger me-1"></i> Trở về danh sách
+                        </a>
+                        <img src="/website_lead_showcase/static/src/img/logo.png" 
+                             alt="SaiGonTrade" 
+                             style="height: 36px;"
+                             onerror="this.style.display='none'"/>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-lg-8 col-12">
+                            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white">
+                                <t t-if="lead.lead_image">
+                                    <img t-attf-src="/web/image/crm.lead/#{lead.id}/lead_image" 
+                                         class="w-100" style="max-height: 420px; object-fit: cover;" 
+                                         alt="Deal Banner"/>
+                                </t>
+                                <div class="card-body p-4 p-md-5">
+                                    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                                        <t t-if="lead.lead_intent">
+                                            <span t-attf-class="badge #{ 'badge-sg-red' if lead.lead_intent == 'buy' else 'badge-sg-sell' }">
+                                                <t t-esc="dict(lead.fields_get(['lead_intent'])['lead_intent']['selection'])[lead.lead_intent]"/>
+                                            </span>
+                                        </t>
+                                        <t t-if="lead.lead_category">
+                                            <span class="badge bg-light text-dark border">
+                                                <t t-esc="lead.lead_category.name"/>
+                                            </span>
+                                        </t>
+                                        <t t-if="lead.is_verified">
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill">
+                                                <i class="fa fa-check-circle"></i> Đã xác thực pháp lý
+                                            </span>
+                                        </t>
+                                    </div>
+
+                                    <h2 class="fw-bold mb-3 fs-3 fs-md-2"><t t-esc="lead.name"/></h2>
+
+                                    <div class="row g-3 p-3 bg-light rounded-3 mb-4">
+                                        <div class="col-sm-6 col-12">
+                                            <small class="text-muted d-block">Doanh nghiệp đề xuất:</small>
+                                            <strong class="text-dark"><t t-esc="lead.partner_name or 'Đang xác thực thông tin'"/></strong>
+                                        </div>
+                                        <div class="col-sm-6 col-12">
+                                            <small class="text-muted d-block">Khu vực / Thị trường:</small>
+                                            <strong class="text-dark"><i class="fa fa-map-marker text-danger"></i> <t t-esc="lead.country_region or 'Toàn cầu'"/></strong>
+                                        </div>
+                                    </div>
+
+                                    <h5 class="fw-bold border-bottom pb-2 mb-3">Thông tin chi tiết nhu cầu</h5>
+                                    <div class="lead-full-description mb-4 lh-lg text-secondary">
+                                        <t t-out="lead.description or lead.short_description"/>
+                                    </div>
+
+                                    <!-- Nút Tải Hồ sơ năng lực / Catalogue PDF nếu có -->
+                                    <t t-if="lead.brochure_file">
+                                        <div class="p-3 bg-danger-subtle rounded-3 d-flex align-items-center justify-content-between mb-4">
+                                            <div>
+                                                <div class="fw-bold text-danger"><i class="fa fa-file-pdf-o me-1"></i> Hồ sơ năng lực / Báo giá chi tiết</div>
+                                                <small class="text-muted">Tài liệu giới thiệu sản phẩm &amp; chứng nhận xuất khẩu</small>
                                             </div>
+                                            <a t-attf-href="/leads/#{lead.id}/download_brochure" class="btn btn-sg-primary btn-sm">
+                                                <i class="fa fa-download me-1"></i> Tải PDF
+                                            </a>
                                         </div>
                                     </t>
                                 </div>
                             </div>
-                        </t>
-                        
-                    </div>
-                    
-                    <!-- Sidebar -->
-                    <div class="col-lg-4">
-                        
-                        <!-- Contact Form -->
-                        <div class="card shadow-sm">
-                            <div class="card-header bg-primary text-white">
-                                <h5 class="mb-0"><i class="fa fa-handshake-o"></i> Yêu cầu Kết nối / Báo giá</h5>
+
+                            <!-- Deal liên quan cùng lĩnh vực -->
+                            <t t-if="related_leads">
+                                <h5 class="fw-bold mb-3"><i class="fa fa-clone text-danger me-2"></i>Cơ hội tương tự cùng phân khúc</h5>
+                                <div class="row g-3 mb-4">
+                                    <t t-foreach="related_leads" t-as="rel">
+                                        <div class="col-md-6 col-12">
+                                            <div class="card h-100 border-0 shadow-sm rounded-3 p-3 bg-white">
+                                                <h6 class="fw-bold mb-1">
+                                                    <a t-attf-href="/leads/#{rel.id}" class="text-dark text-decoration-none">
+                                                        <t t-esc="rel.name"/>
+                                                    </a>
+                                                </h6>
+                                                <small class="text-muted mb-2 d-block"><i class="fa fa-map-marker text-danger"></i> <t t-esc="rel.country_region or 'N/A'"/></small>
+                                                <a t-attf-href="/leads/#{rel.id}" class="text-danger small fw-bold text-decoration-none mt-auto">
+                                                    Xem cơ hội này →
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </t>
+                                </div>
+                            </t>
+                        </div>
+
+                        <!-- Cột Form Gửi Yêu Cầu & Hỗ Trợ Zalo -->
+                        <div class="col-lg-4 col-12">
+                            <div class="card border-0 shadow-sm rounded-4 sticky-top bg-white" style="top: 1.5rem;">
+                                <div class="card-header bg-danger text-white p-3 p-md-4 rounded-top-4">
+                                    <h5 class="mb-0 fw-bold"><i class="fa fa-handshake-o me-1"></i> Yêu cầu Kết nối / Báo giá</h5>
+                                    <small class="text-white-50">Kênh xúc tiến độc quyền SaiGonTrade</small>
+                                </div>
+                                <div class="card-body p-3 p-md-4">
+                                    <form id="lead_contact_form" onsubmit="submitLeadForm(event)">
+                                        
+                                        <t t-if="company_deals">
+                                            <div class="sg-multi-deals-box">
+                                                <label class="form-label fw-bold text-dark mb-1" style="font-size: 0.85rem;">
+                                                    <i class="fa fa-check-square-o text-danger"></i> Chọn thêm deal quan tâm:
+                                                </label>
+                                                <div class="small text-muted mb-2">Tích chọn để kết nối trọn gói:</div>
+                                                <t t-foreach="company_deals" t-as="deal">
+                                                    <div class="form-check sg-deal-check-item">
+                                                        <input class="form-check-input deal-checkbox" type="checkbox" 
+                                                               t-att-value="deal.id" t-attf-id="deal_check_#{deal.id}"/>
+                                                        <label class="form-check-label text-truncate d-block" t-attf-for="deal_check_#{deal.id}">
+                                                            <t t-esc="deal.name"/>
+                                                        </label>
+                                                    </div>
+                                                </t>
+                                            </div>
+                                        </t>
+
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold small">Doanh nghiệp / Họ tên *</label>
+                                            <input type="text" name="contact_name" class="form-control" required="1" placeholder="VD: Công ty TNHH Thương mại ABC..."/>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold small">Email thương mại *</label>
+                                            <input type="email" name="contact_email" class="form-control" required="1" placeholder="lienhe@doanhnghiep.vn"/>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold small">Số điện thoại / Zalo *</label>
+                                            <input type="tel" name="contact_phone" class="form-control" required="1" placeholder="09..."/>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold small">Đề xuất hợp tác &amp; Lời nhắn *</label>
+                                            <textarea name="message" class="form-control" rows="4" required="1" placeholder="Mô tả số lượng đặt hàng hoặc khả năng cung ứng của bạn..."></textarea>
+                                        </div>
+
+                                        <button type="submit" class="btn btn-sg-primary w-100 py-2">
+                                            <i class="fa fa-paper-plane me-1"></i> Gửi Yêu Cầu Kết Nối
+                                        </button>
+                                    </form>
+
+                                    <div id="form_status_message" class="mt-3"></div>
+
+                                    <!-- Nút Hỗ Trợ Zalo Chuyên Viên Nhanh -->
+                                    <div class="mt-3">
+                                        <a t-attf-href="https://zalo.me" target="_blank" class="btn btn-outline-success w-100 py-2">
+                                            <i class="fa fa-comments me-1"></i> Tư Vấn Zalo Nhanh (Mã: #<t t-esc="lead.id"/>)
+                                        </a>
+                                    </div>
+
+                                    <div class="mt-4 pt-3 border-top text-center">
+                                        <div class="badge bg-light text-muted p-2 w-100 text-wrap mb-2">
+                                            <i class="fa fa-shield text-success me-1"></i> Bảo mật thông tin đàm phán 100%
+                                        </div>
+                                        <button class="btn btn-link text-muted btn-sm text-decoration-none" onclick="navigator.clipboard.writeText(window.location.href); alert('Đã sao chép liên kết cơ hội này!');">
+                                            <i class="fa fa-share-alt"></i> Sao chép liên kết chia sẻ
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="card-body">
-                                <form id="lead_contact_form" onsubmit="submitLeadForm(event)">
-                                    
-                                    <!-- Name -->
-                                    <div class="mb-3">
-                                        <label class="form-label">Tên Doanh nghiệp / Cá nhân *</label>
-                                        <input type="text" 
-                                               name="contact_name" 
-                                               class="form-control" 
-                                               required="1"/>
-                                    </div>
-                                    
-                                    <!-- Email -->
-                                    <div class="mb-3">
-                                        <label class="form-label">Email liên hệ *</label>
-                                        <input type="email" 
-                                               name="contact_email" 
-                                               class="form-control" 
-                                               required="1"/>
-                                    </div>
-                                    
-                                    <!-- Phone -->
-                                    <div class="mb-3">
-                                        <label class="form-label">Số điện thoại</label>
-                                        <input type="tel" 
-                                               name="contact_phone" 
-                                               class="form-control"/>
-                                    </div>
-                                    
-                                    <!-- Message -->
-                                    <div class="mb-3">
-                                        <label class="form-label">Giới thiệu năng lực &amp; Lời nhắn *</label>
-                                        <textarea name="message" 
-                                                  class="form-control" 
-                                                  rows="5" 
-                                                  required="1"></textarea>
-                                    </div>
-                                    
-                                    <!-- Submit -->
-                                    <button type="submit" class="btn btn-success w-100">
-                                        Gửi Yêu Cầu Kết Nối
-                                    </button>
-                                    
-                                </form>
+                        </div>
+                    </div>
+
+                    <script type="text/javascript">
+                        async function submitLeadForm(e) {
+                            e.preventDefault();
+                            const form = e.target;
+                            const parts = window.location.pathname.split('/');
+                            const leadId = parts[parts.length - 1];
+                            
+                            const checkedDeals = Array.from(document.querySelectorAll('.deal-checkbox:checked'))
+                                                      .map(cb =&gt; cb.value)
+                                                      .join(',');
+
+                            const submitBtn = form.querySelector('button[type="submit"]');
+                            const originalText = submitBtn.innerHTML;
+                            submitBtn.disabled = true;
+                            submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i> Đang gửi...';
+                            
+                            try {
+                                const formData = new FormData(form);
+                                if (checkedDeals) {
+                                    formData.append('selected_deals', checkedDeals);
+                                }
+
+                                const response = await fetch(`/leads/${leadId}/contact`, {
+                                    method: 'POST',
+                                    body: formData
+                                });
                                 
-                                <!-- Form Status Messages -->
-                                <div id="form_status_message" class="mt-3"></div>
-
-                                <script type="text/javascript">
-                                    async function submitLeadForm(e) {
-                                        e.preventDefault();
-                                        const form = e.target;
-                                        const parts = window.location.pathname.split('/');
-                                        const leadId = parts[parts.length - 1];
-                                        
-                                        const submitBtn = form.querySelector('button[type="submit"]');
-                                        const originalText = submitBtn.textContent;
-                                        submitBtn.disabled = true;
-                                        submitBtn.textContent = 'Đang xử lý...';
-                                        
-                                        try {
-                                            const formData = new FormData(form);
-                                            const response = await fetch(`/leads/${leadId}/contact`, {
-                                                method: 'POST',
-                                                body: formData
-                                            });
-                                            
-                                            const result = await response.json();
-                                            const statusDiv = document.getElementById('form_status_message');
-                                            
-                                            if (result.status === 'success') {
-                                                statusDiv.innerHTML = `<div class="alert alert-success mt-3">${result.message}</div>`;
-                                                form.reset();
-                                            } else {
-                                                statusDiv.innerHTML = `<div class="alert alert-danger mt-3">${result.message}</div>`;
-                                            }
-                                        } catch (error) {
-                                            document.getElementById('form_status_message').innerHTML = '<div class="alert alert-danger mt-3">Lỗi kết nối. Vui lòng tải lại trang!</div>';
-                                        } finally {
-                                            submitBtn.disabled = false;
-                                            submitBtn.textContent = originalText;
-                                        }
-                                    }
-                                </script>
-
-                            </div>
-                        </div>
-                        
-                        <!-- Block Bảo mật thông tin -->
-                        <div class="card shadow-sm mt-4 border-warning">
-                            <div class="card-header bg-warning text-dark">
-                                <h5 class="mb-0"><i class="fa fa-lock"></i> Thông tin đối tác</h5>
-                            </div>
-                            <div class="card-body text-center">
-                                <p class="text-muted mb-2">Thông tin liên hệ trực tiếp đã được bảo mật theo quy định của nền tảng.</p>
-                                <p class="mb-0 fw-bold">Vui lòng điền form phía trên để chúng tôi hỗ trợ kết nối bạn!</p>
-                            </div>
-                        </div>
-                        
-                        <!-- Block Chia sẻ -->
-                        <div class="card shadow-sm mt-4">
-                            <div class="card-body text-center">
-                                <p class="mb-2"><strong>Chia sẻ cơ hội này:</strong></p>
-                                <button class="btn btn-outline-primary btn-sm mx-1" onclick="navigator.clipboard.writeText(window.location.href); alert('Đã copy link thành công!');">
-                                    <i class="fa fa-link"></i> Copy Link
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Stats -->
-                        <div class="card shadow-sm mt-4">
-                            <div class="card-body text-center">
-                                <p class="mb-0 text-muted">
-                                    <i class="fa fa-eye"></i>
-                                    <strong><t t-esc="lead.website_view_count"/></strong> views
-                                </p>
-                                <p class="mb-0 text-muted">
-                                    <i class="fa fa-comment"></i>
-                                    <strong><t t-esc="lead.website_contact_count"/></strong> inquiries
-                                </p>
-                            </div>
-                        </div>
-                        
-                    </div>
-                    
+                                const result = await response.json();
+                                const statusDiv = document.getElementById('form_status_message');
+                                
+                                if (result.status === 'success') {
+                                    statusDiv.innerHTML = `<div class="alert alert-success mt-3 small rounded-3">${result.message}</div>`;
+                                    form.reset();
+                                } else {
+                                    statusDiv.innerHTML = `<div class="alert alert-danger mt-3 small rounded-3">${result.message}</div>`;
+                                }
+                            } catch (error) {
+                                document.getElementById('form_status_message').innerHTML = '<div class="alert alert-danger mt-3 small rounded-3">Lỗi kết nối máy chủ. Vui lòng thử lại sau!</div>';
+                            } finally {
+                                submitBtn.disabled = false;
+                                submitBtn.innerHTML = originalText;
+                            }
+                        }
+                    </script>
                 </div>
-                
             </div>
+        </t>
+    </template>
+
+    <!-- Trang Đăng Ký Cơ Hội Cho Doanh Nghiệp Tự Gửi (/leads/submit) -->
+    <template id="lead_submit_form" name="Đăng Tin Giao Thương SaiGonTrade">
+        <t t-call="website.layout">
+            <div class="sg-page-wrapper py-5">
+                <div class="container" style="max-width: 800px;">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+                        <div class="text-center mb-4">
+                            <img src="/website_lead_showcase/static/src/img/logo.png" 
+                                 alt="SaiGonTrade" 
+                                 style="height: 44px;"
+                                 onerror="this.style.display='none'"/>
+                            <h3 class="fw-bold mt-2">Đăng Ký Cơ Hội Giao Thương</h3>
+                            <p class="text-muted">Tin của bạn sẽ được đội ngũ SaiGonTrade kiểm duyệt và quảng bá đến cộng đồng doanh nghiệp</p>
+                        </div>
+
+                        <form id="portal_lead_submit" onsubmit="handlePortalSubmit(event)">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Tiêu đề nhu cầu giao thương *</label>
+                                <input type="text" name="title" class="form-control" required="1" placeholder="VD: Tìm đối tác thu mua Gạo ST25 xuất khẩu Trung Đông..."/>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Tên doanh nghiệp / Đơn vị *</label>
+                                    <input type="text" name="company_name" class="form-control" required="1" placeholder="Công ty TNHH Nông Nghiệp..."/>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Phân loại nhu cầu *</label>
+                                    <select name="intent" class="form-select">
+                                        <option value="sell">CHÀO BÁN / CUNG CẤP NGUỒN HÀNG</option>
+                                        <option value="buy">TÌM MUA / THU MUA SỐ LƯỢNG LỚN</option>
+                                        <option value="partner">TÌM ĐỐI TÁC GIA CÔNG / LIÊN DANH</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Lĩnh vực sản phẩm *</label>
+                                    <select name="category_id" class="form-select">
+                                        <t t-foreach="categories" t-as="cat">
+                                            <option t-att-value="cat.id"><t t-esc="cat.name"/></option>
+                                        </t>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Khu vực / Tỉnh thành *</label>
+                                    <input type="text" name="country" class="form-control" value="Việt Nam" required="1"/>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Người phụ trách *</label>
+                                    <input type="text" name="contact_name" class="form-control" required="1" placeholder="Nguyễn Văn A"/>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Email liên hệ *</label>
+                                    <input type="email" name="contact_email" class="form-control" required="1" placeholder="sales@company.vn"/>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Số điện thoại *</label>
+                                    <input type="tel" name="contact_phone" class="form-control" required="1" placeholder="090..."/>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Tóm tắt ngắn (Hiện trên thẻ hiển thị) *</label>
+                                <textarea name="short_description" class="form-control" rows="2" required="1" placeholder="Sản lượng, quy cách đóng gói, chứng chỉ đạt được..."></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Nội dung chi tiết &amp; Điều kiện hợp tác</label>
+                                <textarea name="description" class="form-control" rows="4" placeholder="Mô tả cụ thể năng lực sản xuất, phương thức thanh toán, điều khoản Incoterms..."></textarea>
+                            </div>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Hình ảnh đại diện sản phẩm</label>
+                                    <input type="file" name="lead_image" class="form-control" accept="image/*"/>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Catalogue / Hồ sơ năng lực (PDF)</label>
+                                    <input type="file" name="brochure_file" class="form-control" accept=".pdf"/>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-sg-primary w-100 py-3 fw-bold fs-6">
+                                Gửi Hồ Sơ Phê Duyệt
+                            </button>
+                        </form>
+
+                        <div id="portal_submit_status" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+
+            <script type="text/javascript">
+                async function handlePortalSubmit(e) {
+                    e.preventDefault();
+                    const form = e.target;
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    const originalText = submitBtn.innerHTML;
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i> Đang tải lên hệ thống...';
+
+                    try {
+                        const formData = new FormData(form);
+                        const response = await fetch('/leads/submit/process', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        const result = await response.json();
+                        const statusDiv = document.getElementById('portal_submit_status');
+
+                        if (result.status === 'success') {
+                            statusDiv.innerHTML = `<div class="alert alert-success mt-3 p-3 rounded-3">${result.message}</div>`;
+                            form.reset();
+                        } else {
+                            statusDiv.innerHTML = `<div class="alert alert-danger mt-3 p-3 rounded-3">${result.message}</div>`;
+                        }
+                    } catch (err) {
+                        document.getElementById('portal_submit_status').innerHTML = '<div class="alert alert-danger mt-3">Lỗi gửi hồ sơ. Vui lòng thử lại sau!</div>';
+                    } finally {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                    }
+                }
+            </script>
         </t>
     </template>
     

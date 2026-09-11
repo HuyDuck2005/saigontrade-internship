@@ -1,60 +1,97 @@
 import os
 import sys
 import logging
-import time
+from datetime import datetime
+import gspread
+from google.oauth2.service_account import Credentials
+from dotenv import load_dotenv
 
-# Khai báo đường dẫn để import module task5
+load_dotenv()
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from odoo.task5_odoo_create_lead import OdooCRMClient, ODOO_URL, ODOO_USERNAME, ODOO_PASSWORD
+from odoo.task5_odoo_create_lead import OdooCRMClient
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - [%(levelname)s] - %(message)s")
-logger = logging.getLogger("Task14_Queue")
+logger = logging.getLogger("Task14_Standard_Queue")
 
-# Ép kiểu dùng odoo_db (database đang chạy hiện tại của Odoo 1)
-ODOO_DB_LOCAL = "odoo_db"
+SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
+CREDENTIALS_FILE = os.getenv("GOOGLE_CREDENTIALS_FILE", "credentials.json")
+QUEUE_TAB = "Queue"
+
+def get_queue_sheet():
+    scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+    creds = Credentials.from_service_account_file(CREDENTIALS_FILE, scopes=scopes)
+    client = gspread.authorize(creds)
+    doc = client.open_by_key(SPREADSHEET_ID)
+    return doc.worksheet(QUEUE_TAB)
 
 def process_queue():
-    logger.info("🚀 BẮT ĐẦU QUÉT GOOGLE SHEET QUEUE...")
-    client = OdooCRMClient("http://localhost:8069", ODOO_DB_LOCAL, ODOO_USERNAME, ODOO_PASSWORD)
+    if not os.path.exists(CREDENTIALS_FILE):
+        logger.error(f" Không tìm thấy file {CREDENTIALS_FILE}")
+        return
+
+    sheet = get_queue_sheet()
+    logger.info(f" Kết nối Google Sheet thành công: tab [{QUEUE_TAB}]")
     
-    # Giả lập dữ liệu đọc từ Google Sheet bằng gspread.worksheet.get_all_records()
-    sheet_rows = [
-        {"row_idx": 2, "status": "NEW", "deal_name": "Đơn hàng từ Queue 1", "contact_name": "Trần A", "phone": "0911000111"},
-        {"row_idx": 3, "status": "PROCESSING", "deal_name": "Đơn hàng đang kẹt", "contact_name": "Lê B", "phone": "0922000222"},
-        {"row_idx": 4, "status": "NEW", "deal_name": "Đơn hàng từ Queue 2", "contact_name": "Phạm C", "phone": "0933000333"}
-    ]
+    rows = sheet.get_all_values()
+    if len(rows) <= 1:
+        logger.info("Hàng đợi không có dữ liệu cần xử lý.")
+        return
+
+    headers = rows[0]
     
-    logger.info(f"Đã tải {len(sheet_rows)} dòng từ Google Sheet.")
-    
-    for row in sheet_rows:
-        status = row.get("status")
-        row_idx = row.get("row_idx")
-        
+    # Ánh xạ chỉ mục các cột
+    col_map = {h: idx + 1 for idx, h in enumerate(headers)}
+    status_col = col_map.get("Status", 1)
+    odoo_id_col = col_map.get("Odoo Deal ID")
+    updated_col = col_map.get("Updated At")
+
+    odoo_client = OdooCRMClient(
+        os.getenv("ODOO_URL", "http://localhost:8069"),
+        os.getenv("ODOO_DB", "odoo_db"),
+        os.getenv("ODOO_USERNAME", "admin"),
+        os.getenv("ODOO_PASSWORD", "admin")
+    )
+
+    for idx, row in enumerate(rows[1:], start=2):
+        status = str(row[status_col - 1]).strip().upper()
         if status != "NEW":
-            logger.info(f"⏭️ Bỏ qua dòng {row_idx} (Trạng thái hiện tại: {status})")
             continue
-            
-        logger.info(f"⏳ Đang xử lý dòng {row_idx} - Đổi trạng thái Sheet thành PROCESSING...")
-        # Ở môi trường thật: ws.update_cell(row_idx, col_status, 'PROCESSING')
-        
+
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        logger.info(f" Dòng {idx} -> Cập nhật trạng thái: PROCESSING...")
+        sheet.update_cell(idx, status_col, "PROCESSING")
+        if updated_col:
+            sheet.update_cell(idx, updated_col, now_str)
+
+        # Mapping dữ liệu an toàn
+        deal_name = row[col_map["Deal Name"] - 1] if "Deal Name" in col_map else f"Deal #{idx}"
+        contact_name = row[col_map["Contact Name"] - 1] if "Contact Name" in col_map else ""
+        email = row[col_map["Email"] - 1] if "Email" in col_map else ""
+        phone = row[col_map["Phone"] - 1] if "Phone" in col_map else ""
+
         lead_data = {
-            "name": row.get("deal_name"),
-            "contact_name": row.get("contact_name"),
-            "phone": row.get("phone")
+            "name": deal_name,
+            "contact_name": contact_name,
+            "email_from": email,
+            "phone": phone
         }
-        
+
         try:
-            res = client.create_lead(lead_data)
+            res = odoo_client.create_lead(lead_data)
             if res.get("success"):
-                logger.info(f"✅ THÀNH CÔNG! Dòng {row_idx} -> Đã tạo Odoo Deal ID: {res['lead_id']}")
-                logger.info(f"🔄 Đổi trạng thái Sheet thành DONE.\n")
-                # Ở môi trường thật: ws.update_cell(row_idx, col_status, 'DONE')
+                lead_id = res["lead_id"]
+                logger.info(f" Tạo Odoo Lead ID {lead_id} thành công -> Cập nhật: DONE")
+                sheet.update_cell(idx, status_col, "DONE")
+                if odoo_id_col:
+                    sheet.update_cell(idx, odoo_id_col, str(lead_id))
+                if updated_col:
+                    sheet.update_cell(idx, updated_col, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             else:
-                logger.error(f"❌ Lỗi dòng {row_idx}: {res.get('error')}")
-                logger.info(f"🔄 Đổi trạng thái Sheet thành ERROR.\n")
+                logger.error(f" Lỗi Odoo dòng {idx}: {res.get('error')}")
+                sheet.update_cell(idx, status_col, "ERROR")
         except Exception as e:
-            logger.error(f"❌ Exception tại dòng {row_idx}: {str(e)}")
-            logger.info(f"🔄 Đổi trạng thái Sheet thành ERROR.\n")
+            logger.error(f" Ngoại lệ dòng {idx}: {e}")
+            sheet.update_cell(idx, status_col, "ERROR")
 
 if __name__ == "__main__":
     process_queue()

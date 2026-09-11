@@ -1,108 +1,108 @@
 import os
 import sys
 import logging
+import requests
 import xmlrpc.client
-from datetime import datetime, timedelta
+from dotenv import load_dotenv
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from odoo.task5_odoo_create_lead import ODOO_URL, ODOO_DB, ODOO_USERNAME, ODOO_PASSWORD
-
+load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - [%(levelname)s] - %(message)s")
-logger = logging.getLogger("Task16_HubSpot_Odoo_Sync")
+logger = logging.getLogger("Task16_HubSpot_To_Odoo")
 
-# Giả lập database Odoo 1
-ODOO_DB_LOCAL = "odoo_db"
+HUBSPOT_TOKEN = os.getenv("HUBSPOT_ACCESS_TOKEN")
+ODOO_URL = os.getenv("ODOO_URL", "http://localhost:8069")
+ODOO_DB = os.getenv("ODOO_DB", "odoo_db")
+ODOO_USERNAME = os.getenv("ODOO_USERNAME", "admin")
+ODOO_PASSWORD = os.getenv("ODOO_PASSWORD", "admin")
 
-def mock_hubspot_api_incremental(last_sync_time):
-    """
-    Giả lập API HubSpot với YÊU CẦU NÂNG CAO: Incremental Sync.
-    Chỉ trả về những Contact có lastmodifieddate > last_sync_time.
-    """
-    logger.info(f"🔍 [Advanced] Đang gọi HubSpot API lấy các Contact thay đổi từ sau: {last_sync_time}")
-    return [
-        # Case 1: Tồn tại HubSpot ID -> Phải Update
-        {"hs_id": "HS001", "firstname": "Nguyễn", "lastname": "Văn A", "email": "a@sgt.vn", "phone": "0911"},
-        # Case 2: Không có HS ID, nhưng trùng Email -> Phải Update và gán HS ID
-        {"hs_id": "HS002", "firstname": "Trần", "lastname": "Thị B", "email": "b@sgt.vn", "phone": "0922"},
-        # Case 3: Không trùng ID, không trùng Email, trùng Phone -> Phải Update
-        {"hs_id": "HS003", "firstname": "Lê", "lastname": "Văn C", "email": "c_new@sgt.vn", "phone": "0933"},
-        # Case 4: Hoàn toàn mới -> Create
-        {"hs_id": "HS004", "firstname": "Phạm", "lastname": "Đại D", "email": "d@sgt.vn", "phone": "0944"}
-    ]
-
-def get_odoo_models():
+def get_odoo_connection():
     common = xmlrpc.client.ServerProxy(f"{ODOO_URL}/xmlrpc/2/common", allow_none=True)
-    uid = common.authenticate(ODOO_DB_LOCAL, ODOO_USERNAME, ODOO_PASSWORD, {})
+    uid = common.authenticate(ODOO_DB, ODOO_USERNAME, ODOO_PASSWORD, {})
+    if not uid:
+        raise ConnectionError("Kết nối Odoo thất bại")
     models = xmlrpc.client.ServerProxy(f"{ODOO_URL}/xmlrpc/2/object", allow_none=True)
     return models, uid
 
-def ensure_hubspot_id_field(models, uid):
-    """Tự động tạo custom field x_hubspot_contact_id nếu chưa có"""
-    fields = models.execute_kw(ODOO_DB_LOCAL, uid, ODOO_PASSWORD, 'res.partner', 'fields_get', [], {'attributes': ['string']})
-    if 'x_hubspot_contact_id' not in fields:
-        model_ids = models.execute_kw(ODOO_DB_LOCAL, uid, ODOO_PASSWORD, 'ir.model', 'search', [[['model', '=', 'res.partner']]])
-        models.execute_kw(ODOO_DB_LOCAL, uid, ODOO_PASSWORD, 'ir.model.fields', 'create', [{
-            'name': 'x_hubspot_contact_id', 'model_id': model_ids[0], 'ttype': 'char', 'field_description': 'HubSpot ID', 'state': 'manual'
-        }])
-        logger.info("✨ Đã tạo custom field 'x_hubspot_contact_id' trên Odoo.")
+def ensure_hubspot_custom_field(models, uid):
+    fields = models.execute_kw(ODOO_DB, uid, ODOO_PASSWORD, "res.partner", "fields_get", [], {"attributes": ["string"]})
+    if "x_hubspot_contact_id" not in fields:
+        model_ids = models.execute_kw(ODOO_DB, uid, ODOO_PASSWORD, "ir.model", "search", [[["model", "=", "res.partner"]]])
+        if model_ids:
+            models.execute_kw(ODOO_DB, uid, ODOO_PASSWORD, "ir.model.fields", "create", [{
+                "name": "x_hubspot_contact_id",
+                "model_id": model_ids[0],
+                "ttype": "char",
+                "field_description": "HubSpot Contact ID",
+                "state": "manual"
+            }])
+            logger.info("✨ Đã tạo custom field x_hubspot_contact_id trên res.partner Odoo")
 
-def run_sync():
-    models, uid = get_odoo_models()
-    ensure_hubspot_id_field(models, uid)
-    
-    # Giả lập thời gian chạy lần cuối (Incremental Sync)
-    last_sync = (datetime.now() - timedelta(hours=1)).strftime("%Y-%m-%d %H:%M:%S")
-    hs_contacts = mock_hubspot_api_incremental(last_sync)
-    
-    # Khởi tạo dữ liệu mồi (Mock data) cho các Case 1, 2, 3 trong Odoo để test update
-    models.execute_kw(ODOO_DB_LOCAL, uid, ODOO_PASSWORD, 'res.partner', 'create', [{'name': 'Cũ A', 'x_hubspot_contact_id': 'HS001'}])
-    models.execute_kw(ODOO_DB_LOCAL, uid, ODOO_PASSWORD, 'res.partner', 'create', [{'name': 'Cũ B', 'email': 'b@sgt.vn'}])
-    models.execute_kw(ODOO_DB_LOCAL, uid, ODOO_PASSWORD, 'res.partner', 'create', [{'name': 'Cũ C', 'phone': '0933'}])
-    
-    for c in hs_contacts:
-        hs_id = c['hs_id']
-        email = c['email']
-        phone = c['phone']
-        full_name = f"{c['firstname']} {c['lastname']}"
-        
-        partner_id = None
-        match_reason = ""
-        
-        # LOGIC ƯU TIÊN MATCHING
-        # Ưu tiên 1: HubSpot ID
-        p_ids = models.execute_kw(ODOO_DB_LOCAL, uid, ODOO_PASSWORD, 'res.partner', 'search', [[['x_hubspot_contact_id', '=', hs_id]]])
+def fetch_hubspot_contacts_real(limit=50):
+    if not HUBSPOT_TOKEN:
+        logger.error("❌ Thiếu HUBSPOT_ACCESS_TOKEN trong file .env!")
+        return []
+    url = "https://api.hubapi.com/crm/v3/objects/contacts"
+    headers = {"Authorization": f"Bearer {HUBSPOT_TOKEN}", "Content-Type": "application/json"}
+    params = {"limit": limit, "properties": "firstname,lastname,email,phone,mobilephone,company,jobtitle"}
+    res = requests.get(url, headers=headers, params=params, timeout=15)
+    if res.status_code == 200:
+        return res.json().get("results", [])
+    logger.error(f"Lỗi gọi HubSpot API ({res.status_code}): {res.text}")
+    return []
+
+def sync_hubspot_to_odoo_real():
+    models, uid = get_odoo_connection()
+    ensure_hubspot_custom_field(models, uid)
+
+    contacts = fetch_hubspot_contacts_real()
+    logger.info(f"📥 Lấy được {len(contacts)} contacts thật từ HubSpot API v3.")
+
+    created, updated = 0, 0
+    for c in contacts:
+        hs_id = str(c.get("id"))
+        p = c.get("properties", {})
+        firstname = p.get("firstname") or ""
+        lastname = p.get("lastname") or ""
+        full_name = f"{firstname} {lastname}".strip() or p.get("email") or f"HubSpot Contact {hs_id}"
+        email = (p.get("email") or "").strip()
+        phone = (p.get("phone") or p.get("mobilephone") or "").strip()
+
+        # QUY TẮC ĐỐI SOÁT CHỐNG DUPLICATE
+        matched_partner_id = None
+
+        # 1. Tìm theo HubSpot ID
+        p_ids = models.execute_kw(ODOO_DB, uid, ODOO_PASSWORD, "res.partner", "search", [[["x_hubspot_contact_id", "=", hs_id]]], {"limit": 1})
         if p_ids:
-            partner_id = p_ids[0]
-            match_reason = "HubSpot ID"
-        
-        # Ưu tiên 2: Email
-        if not partner_id and email:
-            p_ids = models.execute_kw(ODOO_DB_LOCAL, uid, ODOO_PASSWORD, 'res.partner', 'search', [[['email', '=', email]]])
+            matched_partner_id = p_ids[0]
+
+        # 2. Tìm theo Email
+        if not matched_partner_id and email:
+            p_ids = models.execute_kw(ODOO_DB, uid, ODOO_PASSWORD, "res.partner", "search", [[["email", "=", email]]], {"limit": 1})
             if p_ids:
-                partner_id = p_ids[0]
-                match_reason = "Email"
-                
-        # Ưu tiên 3: Phone
-        if not partner_id and phone:
-            p_ids = models.execute_kw(ODOO_DB_LOCAL, uid, ODOO_PASSWORD, 'res.partner', 'search', [[['phone', '=', phone]]])
+                matched_partner_id = p_ids[0]
+
+        # 3. Tìm theo Phone
+        if not matched_partner_id and phone:
+            p_ids = models.execute_kw(ODOO_DB, uid, ODOO_PASSWORD, "res.partner", "search", [[["phone", "=", phone]]], {"limit": 1})
             if p_ids:
-                partner_id = p_ids[0]
-                match_reason = "Phone"
-                
-        # Xử lý Create hoặc Update
+                matched_partner_id = p_ids[0]
+
         vals = {
-            'name': full_name,
-            'email': email,
-            'phone': phone,
-            'x_hubspot_contact_id': hs_id
+            "name": full_name,
+            "email": email,
+            "phone": phone,
+            "function": p.get("jobtitle") or "",
+            "x_hubspot_contact_id": hs_id
         }
-        
-        if partner_id:
-            models.execute_kw(ODOO_DB_LOCAL, uid, ODOO_PASSWORD, 'res.partner', 'write', [[partner_id], vals])
-            logger.info(f"🔄 Đã UPDATE Contact '{full_name}' (Khớp bằng: {match_reason})")
+
+        if matched_partner_id:
+            models.execute_kw(ODOO_DB, uid, ODOO_PASSWORD, "res.partner", "write", [[matched_partner_id], vals])
+            updated += 1
         else:
-            new_id = models.execute_kw(ODOO_DB_LOCAL, uid, ODOO_PASSWORD, 'res.partner', 'create', [vals])
-            logger.info(f"✅ Đã CREATE Contact mới '{full_name}' (ID: {new_id})")
+            models.execute_kw(ODOO_DB, uid, ODOO_PASSWORD, "res.partner", "create", [vals])
+            created += 1
+
+    logger.info(f"✅ TỔNG KẾT TASK 16: Tạo mới {created} Contact | Cập nhật {updated} Contact vào Odoo CRM.")
 
 if __name__ == "__main__":
-    run_sync()
+    sync_hubspot_to_odoo_real()

@@ -11,12 +11,12 @@
                         <h2><field name="partner_id" readonly="1" options="{'no_open': True}"/></h2>
                     </div>
                     <field name="line_ids">
-                        <list create="false" delete="false">
+                        <list create="false" delete="false" edit="false" limit="15">
                             <field name="target_partner_id"/>
                             <field name="country_id"/>
                             <field name="score" widget="badge" decoration-success="score >= 40" decoration-info="score &lt; 40"/>
                             <field name="reason"/>
-                            <button name="action_create_match" string="Kết Nối Ngay" type="object" class="btn btn-sm btn-primary"/>
+                            <button name="action_create_match" string="Kết Nối Ngay" type="object" class="btn btn-sm btn-primary" special="cancel"/>
                         </list>
                     </field>
                 </sheet>

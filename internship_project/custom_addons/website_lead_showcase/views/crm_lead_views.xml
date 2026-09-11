@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
     
-    <!-- Form View riêng cho quản lý Website Lead -->
     <record id="crm_lead_view_form_website_showcase" model="ir.ui.view">
         <field name="name">crm.lead.form.website.showcase</field>
         <field name="model">crm.lead</field>
@@ -25,29 +24,35 @@
                 </header>
                 <sheet>
                     <div class="oe_title">
-                        <h1><field name="name" placeholder="Tên Lead..."/></h1>
+                        <label for="name" string="Tiêu đề cơ hội"/>
+                        <h1><field name="name" placeholder="Ví dụ: Nguồn cung Cà phê Robusta Honey..."/></h1>
                     </div>
                     <group>
                         <group string="Trạng thái &amp; Duyệt">
                             <field name="website_visible"/>
+                            <field name="is_verified"/>
+                            <field name="expiration_date"/>
                             <field name="approved_by" readonly="1"/>
                             <field name="approval_date" readonly="1"/>
                         </group>
                         <group string="Thông tin hiển thị Website">
-                            <field name="lead_image" widget="image" options="{'size': [256, 256]}"/>
+                            <field name="lead_image" widget="image" options="{'size': [200, 200]}"/>
                             <field name="lead_intent" widget="radio" options="{'horizontal': true}"/>
                             <field name="lead_category"/>
                             <field name="country_region"/>
+                            <field name="brochure_file" filename="brochure_filename"/>
+                            <field name="brochure_filename" invisible="1"/>
                             <field name="website_published_date" readonly="1"/>
                         </group>
                     </group>
                     
                     <group string="Mô tả">
-                        <field name="short_description" nolabel="1" placeholder="Mô tả ngắn hiển thị trên card..."/>
-                        <field name="description" placeholder="Mô tả chi tiết..."/>
+                        <field name="short_description" nolabel="1" placeholder="Mô tả ngắn hiển thị trên card website..."/>
+                        <field name="description" placeholder="Nội dung chi tiết nhu cầu giao thương..."/>
                     </group>
                     
-                    <group string="Thông tin liên hệ">
+                    <group string="Thông tin liên hệ &amp; Doanh nghiệp">
+                        <field name="partner_name"/>
                         <field name="contact_person"/>
                         <field name="contact_phone"/>
                         <field name="contact_email"/>
@@ -74,28 +79,20 @@
                                 </list>
                             </field>
                         </page>
-                    
-                        
-    
-                        
                         <page string="Ảnh sản phẩm &amp; Nhà sản xuất" name="product_images">
-                            <group string="Quản lý thư viện ảnh sản phẩm &amp; nhà sản xuất (Có thể thêm nhiều ảnh và ghi miêu tả)">
-                                <field name="gallery_image_ids" mode="list">
-                                    <list editable="bottom">
-                                        <field name="image" widget="image" options="{'size': [80, 80]}" string="Hình ảnh"/>
-                                        <field name="name" string="Miêu tả / Tên sản phẩm"/>
-                                    </list>
-                                </field>
-                            </group>
+                            <field name="gallery_image_ids" mode="list">
+                                <list editable="bottom">
+                                    <field name="image" widget="image" options="{'size': [90, 60]}" string="Hình ảnh"/>
+                                    <field name="name" string="Tên sản phẩm / Miêu tả"/>
+                                </list>
+                            </field>
                         </page>
-
-                        </notebook>
+                    </notebook>
                 </sheet>
             </form>
         </field>
     </record>
 
-    <!-- List View cho quản lý Lead -->
     <record id="crm_lead_tree_view_website" model="ir.ui.view">
         <field name="name">crm.lead.tree.website</field>
         <field name="model">crm.lead</field>
@@ -105,40 +102,32 @@
                   decoration-warning="approval_status=='draft'"
                   decoration-danger="approval_status=='rejected'">
                 <field name="name"/>
-                <field name="lead_intent" widget="radio" options="{'horizontal': true}"/>
-                            <field name="lead_category"/>
+                <field name="partner_name"/>
+                <field name="is_verified" widget="boolean_toggle"/>
+                <field name="lead_intent"/>
+                <field name="lead_category"/>
                 <field name="approval_status" widget="badge"/>
+                <field name="expiration_date"/>
                 <field name="website_visible"/>
-                <field name="approval_date"/>
                 <field name="website_view_count"/>
             </list>
         </field>
     </record>
     
-    <!-- Search View -->
     <record id="crm_lead_search_view_website" model="ir.ui.view">
         <field name="name">crm.lead.search.website</field>
         <field name="model">crm.lead</field>
         <field name="arch" type="xml">
             <search string="Leads">
-                <field name="name" string="Lead Name"/>
-                <field name="lead_intent" widget="radio" options="{'horizontal': true}"/>
-                            <field name="lead_category"/>
-                <field name="approval_status"/>
+                <field name="name" string="Tên cơ hội"/>
+                <field name="partner_name" string="Doanh nghiệp"/>
+                <field name="lead_category"/>
+                <filter name="verified" string="Đã xác minh" domain="[('is_verified', '=', True)]"/>
+                <filter name="approved" string="Đã duyệt" domain="[('approval_status', '=', 'approved')]"/>
+                <filter name="draft" string="Chưa duyệt" domain="[('approval_status', '=', 'draft')]"/>
+                <filter name="rejected" string="Bị từ chối" domain="[('approval_status', '=', 'rejected')]"/>
                 <separator/>
-                <filter name="approved" 
-                        string="Approved" 
-                        domain="[('approval_status', '=', 'approved')]"/>
-                <filter name="draft" 
-                        string="Draft" 
-                        domain="[('approval_status', '=', 'draft')]"/>
-                <filter name="rejected" 
-                        string="Rejected" 
-                        domain="[('approval_status', '=', 'rejected')]"/>
-                <separator/>
-                <filter name="website_visible" 
-                        string="Visible on Website" 
-                        domain="[('website_visible', '=', True)]"/>
+                <filter name="website_visible" string="Hiện trên Website" domain="[('website_visible', '=', True)]"/>
             </search>
         </field>
     </record>
